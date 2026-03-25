@@ -1,3 +1,4 @@
+import { Prisma, type PrismaClient } from "@prisma/client";
 import { Router } from "express";
 import { prisma } from "../db.js";
 import {
@@ -107,50 +108,54 @@ stakeholdersRouter.post("/links", async (request, response) => {
 stakeholdersRouter.post("/create-and-link", async (request, response) => {
   const payload = createLinkedContactSchema.parse(request.body);
 
-  const result = await prisma.$transaction(async (transaction) => {
-    const contact = await transaction.contact.create({
-      data: {
-        fullName: payload.fullName,
-        role: payload.role,
-        phone: payload.phone || null,
-        email: payload.email || null,
-        address: payload.address || null,
-        preferredLanguage: payload.preferredLanguage || null,
-        generalNotes: payload.generalNotes || null
-      }
-    });
+  const result = await prisma.$transaction(
+    async (transaction: Prisma.TransactionClient) => {
+      const contact = await transaction.contact.create({
+        data: {
+          fullName: payload.fullName,
+          role: payload.role,
+          phone: payload.phone || null,
+          email: payload.email || null,
+          address: payload.address || null,
+          preferredLanguage: payload.preferredLanguage || null,
+          generalNotes: payload.generalNotes || null
+        }
+      });
 
-    const link = await transaction.patientContact.create({
-      data: {
-        patientId: payload.patientId,
-        contactId: contact.id,
-        relationshipToPatient: payload.relationshipToPatient || null,
-        involvementStatus: payload.involvementStatus || null,
-        sharingConsent: payload.sharingConsent,
-        notes: payload.notes || null
-      },
-      include: {
-        contact: true,
-        patient: {
-          select: {
-            id: true,
-            fullName: true
+      const link = await transaction.patientContact.create({
+        data: {
+          patientId: payload.patientId,
+          contactId: contact.id,
+          relationshipToPatient: payload.relationshipToPatient || null,
+          involvementStatus: payload.involvementStatus || null,
+          sharingConsent: payload.sharingConsent,
+          notes: payload.notes || null
+        },
+        include: {
+          contact: true,
+          patient: {
+            select: {
+              id: true,
+              fullName: true
+            }
           }
         }
-      }
-    });
+      });
 
-    return { contact, link };
-  });
+      return { contact, link };
+    }
+  );
 
   return response.status(201).json(result);
 });
 
 stakeholdersRouter.put("/links/:id", async (request, response) => {
-  const payload = patientContactSchema.partial({
-    patientId: true,
-    contactId: true
-  }).parse(request.body);
+  const payload = patientContactSchema
+    .partial({
+      patientId: true,
+      contactId: true
+    })
+    .parse(request.body);
 
   const link = await prisma.patientContact.update({
     where: { id: request.params.id },
