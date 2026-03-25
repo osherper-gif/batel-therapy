@@ -24,7 +24,8 @@ export function LoginPage() {
       setError(null);
       const response = await apiFetch<LoginResponse>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        requiresAuth: false
       });
       setToken(response.token);
       navigate("/");
