@@ -1,0 +1,14 @@
+node_modules/
+.env
+dist/
+build/
+.vite/
+.turbo/
+.npm-cache/
+.DS_Store
+Thumbs.db
+*.log
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/uploads/
+data/

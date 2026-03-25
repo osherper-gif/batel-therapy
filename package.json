@@ -1,0 +1,16 @@
+{
+  "name": "batel-therapy-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local-first therapy management app for Batel - Phase 1 MVP",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm.cmd --workspace backend run dev",
+    "dev:frontend": "npm.cmd --workspace frontend run dev",
+    "build": "npm.cmd --workspace backend run build && npm.cmd --workspace frontend run build",
+    "seed": "npm.cmd --workspace backend run prisma:seed"
+  }
+}
