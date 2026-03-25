@@ -60,6 +60,7 @@ export function PatientDetailsPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [contactMode, setContactMode] = useState<"existing" | "new" | null>(null);
   const [showQuickSession, setShowQuickSession] = useState(false);
   const [quickSession, setQuickSession] = useState({
     patientId: id || "",
@@ -282,70 +283,138 @@ export function PatientDetailsPage() {
         <SectionCard title="אנשי קשר" subtitle="איש קשר אחד יכול להיות מקושר לכמה מטופלים">
           {contactError ? <StatusMessage message={contactError} tone="error" /> : null}
 
-          <div className="two-column">
+          <EntityTable
+            rows={patient.patientContacts}
+            emptyText="אין עדיין אנשי קשר מקושרים למטופל."
+            columns={[
+              { key: "name", header: "שם", render: (row) => row.contact.fullName },
+              { key: "role", header: "תפקיד", render: (row) => row.contact.role },
+              {
+                key: "relationship",
+                header: "קשר למטופל",
+                render: (row) => row.relationshipToPatient || "-"
+              },
+              {
+                key: "status",
+                header: "מעורבות",
+                render: (row) => row.involvementStatus || "-"
+              },
+              {
+                key: "phone",
+                header: "טלפון",
+                render: (row) => row.contact.phone || "-"
+              },
+              {
+                key: "actions",
+                header: "",
+                render: (row) => (
+                  <button className="ghost-button" type="button" onClick={() => void handleUnlink(row.id)}>
+                    ביטול קישור
+                  </button>
+                )
+              }
+            ]}
+          />
+
+          <div className="contact-actions-bar">
+            <button type="button" onClick={() => setContactMode("existing")}>
+              שייך איש קשר קיים
+            </button>
+            <button type="button" onClick={() => setContactMode("new")}>
+              צור איש קשר חדש וקשר למטופל
+            </button>
+          </div>
+
+          {contactMode === "existing" ? (
             <section className="nested-panel">
-              <h3>קישור איש קשר קיים</h3>
-              <form className="compact-form" onSubmit={handleLinkExisting}>
-                <label>
-                  איש קשר קיים
-                  <select
-                    value={linkExisting.contactId}
-                    onChange={(event) => setLinkExisting({ ...linkExisting, contactId: event.target.value })}
-                  >
-                    <option value="">בחרי איש קשר</option>
-                    {availableContacts.map((contact) => (
-                      <option key={contact.id} value={contact.id}>
-                        {contact.fullName} | {contact.role}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="panel-heading">
+                <div>
+                  <h3>שיוך איש קשר קיים</h3>
+                  <p className="muted">בחירה מהמאגר המרכזי וקביעת פרטי הקשר למטופל הנוכחי.</p>
+                </div>
+                <button className="ghost-button" type="button" onClick={() => setContactMode(null)}>
+                  סגירה
+                </button>
+              </div>
 
-                <label>
-                  קשר למטופל
-                  <input
-                    value={linkExisting.relationshipToPatient}
-                    onChange={(event) =>
-                      setLinkExisting({ ...linkExisting, relationshipToPatient: event.target.value })
-                    }
-                  />
-                </label>
+              {availableContacts.length ? (
+                <form className="compact-form" onSubmit={handleLinkExisting}>
+                  <label>
+                    איש קשר קיים
+                    <select
+                      value={linkExisting.contactId}
+                      onChange={(event) => setLinkExisting({ ...linkExisting, contactId: event.target.value })}
+                    >
+                      <option value="">בחרי איש קשר</option>
+                      {availableContacts.map((contact) => (
+                        <option key={contact.id} value={contact.id}>
+                          {contact.fullName} | {contact.role}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                <label>
-                  סטטוס מעורבות
-                  <input
-                    value={linkExisting.involvementStatus}
-                    onChange={(event) =>
-                      setLinkExisting({ ...linkExisting, involvementStatus: event.target.value })
-                    }
-                  />
-                </label>
+                  <div className="two-column">
+                    <label>
+                      קשר למטופל
+                      <input
+                        value={linkExisting.relationshipToPatient}
+                        onChange={(event) =>
+                          setLinkExisting({ ...linkExisting, relationshipToPatient: event.target.value })
+                        }
+                      />
+                    </label>
 
-                <label className="full-width">
-                  הערות למטופל הזה
-                  <textarea
-                    value={linkExisting.notes}
-                    onChange={(event) => setLinkExisting({ ...linkExisting, notes: event.target.value })}
-                  />
-                </label>
+                    <label>
+                      סטטוס מעורבות
+                      <input
+                        value={linkExisting.involvementStatus}
+                        onChange={(event) =>
+                          setLinkExisting({ ...linkExisting, involvementStatus: event.target.value })
+                        }
+                      />
+                    </label>
+                  </div>
 
-                <label className="checkbox-row">
-                  <input
-                    type="checkbox"
-                    checked={linkExisting.sharingConsent}
-                    onChange={(event) =>
-                      setLinkExisting({ ...linkExisting, sharingConsent: event.target.checked })
-                    }
-                  />
-                  אישור שיתוף מידע
-                </label>
+                  <label>
+                    הערות למטופל הזה
+                    <textarea
+                      value={linkExisting.notes}
+                      onChange={(event) => setLinkExisting({ ...linkExisting, notes: event.target.value })}
+                    />
+                  </label>
 
-                <button type="submit">קישור איש קשר</button>
-              </form>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={linkExisting.sharingConsent}
+                      onChange={(event) =>
+                        setLinkExisting({ ...linkExisting, sharingConsent: event.target.checked })
+                      }
+                    />
+                    אישור שיתוף מידע
+                  </label>
+
+                  <button type="submit">שמור קישור למטופל</button>
+                </form>
+              ) : (
+                <p className="muted">כל אנשי הקשר במאגר כבר משויכים למטופל הזה, או שעדיין אין אנשי קשר כלליים.</p>
+              )}
             </section>
+          ) : null}
 
+          {contactMode === "new" ? (
             <section className="nested-panel">
-              <h3>יצירה וקישור של איש קשר חדש</h3>
+              <div className="panel-heading">
+                <div>
+                  <h3>יצירה וקישור של איש קשר חדש</h3>
+                  <p className="muted">יוצר איש קשר חדש במאגר המרכזי ומקשר אותו מיד למטופל.</p>
+                </div>
+                <button className="ghost-button" type="button" onClick={() => setContactMode(null)}>
+                  סגירה
+                </button>
+              </div>
+
               <form className="form-grid" onSubmit={handleCreateAndLink}>
                 <label>
                   שם מלא
@@ -424,43 +493,10 @@ export function PatientDetailsPage() {
                   />
                   אישור שיתוף מידע
                 </label>
-                <button type="submit">יצירה וקישור</button>
+                <button type="submit">צור וקשר למטופל</button>
               </form>
             </section>
-          </div>
-
-          <EntityTable
-            rows={patient.patientContacts}
-            emptyText="אין עדיין אנשי קשר מקושרים למטופל."
-            columns={[
-              { key: "name", header: "שם", render: (row) => row.contact.fullName },
-              { key: "role", header: "תפקיד", render: (row) => row.contact.role },
-              {
-                key: "relationship",
-                header: "קשר למטופל",
-                render: (row) => row.relationshipToPatient || "-"
-              },
-              {
-                key: "status",
-                header: "מעורבות",
-                render: (row) => row.involvementStatus || "-"
-              },
-              {
-                key: "phone",
-                header: "טלפון",
-                render: (row) => row.contact.phone || "-"
-              },
-              {
-                key: "actions",
-                header: "",
-                render: (row) => (
-                  <button className="ghost-button" type="button" onClick={() => void handleUnlink(row.id)}>
-                    ביטול קישור
-                  </button>
-                )
-              }
-            ]}
-          />
+          ) : null}
         </SectionCard>
       ) : null}
 
