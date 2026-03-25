@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import fs from "node:fs";
+import path from "node:path";
 import { env } from "./config.js";
 import { requireAuth } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -37,5 +39,18 @@ app.use("/api/patients", requireAuth, patientsRouter);
 app.use("/api/stakeholders", requireAuth, stakeholdersRouter);
 app.use("/api/sessions", requireAuth, sessionsRouter);
 app.use("/api/files", requireAuth, filesRouter);
+
+if (process.env.NODE_ENV === "production") {
+  const frontendDistPath = path.resolve(process.cwd(), "..", "frontend", "dist");
+  const frontendIndexPath = path.join(frontendDistPath, "index.html");
+
+  if (fs.existsSync(frontendIndexPath)) {
+    app.use(express.static(frontendDistPath));
+
+    app.get(/^(?!\/api|\/uploads).*/, (_request, response) => {
+      response.sendFile(frontendIndexPath);
+    });
+  }
+}
 
 app.use(errorHandler);

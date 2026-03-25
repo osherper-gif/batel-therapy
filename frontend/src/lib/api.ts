@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:3000/api";
+const isLocalDev = window.location.hostname === "localhost";
+const API_URL = isLocalDev ? "http://localhost:4000/api" : "/api";
+const APP_URL = isLocalDev ? "http://localhost:4000" : "";
 const TOKEN_KEY = "batel-admin-token";
 
 interface ApiFetchOptions extends RequestInit {
@@ -18,12 +20,8 @@ export function setToken(token: string | null) {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
-function isLoginPage() {
-  return window.location.pathname === "/login";
-}
-
 function redirectToLogin() {
-  if (!isLoginPage()) {
+  if (window.location.pathname !== "/login") {
     window.location.assign("/login");
   }
 }
@@ -32,7 +30,11 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
   const requiresAuth = init?.requiresAuth ?? true;
   const token = getToken();
   const headers = new Headers(init?.headers);
-  const isAuthRequest = path.startsWith("/auth");
+
+  if (requiresAuth && !token) {
+    redirectToLogin();
+    throw new Error("יש להתחבר כדי להמשיך.");
+  }
 
   if (!(init?.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -42,20 +44,15 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  if (requiresAuth && !token && !isAuthRequest) {
-    redirectToLogin();
-    throw new Error("Authentication required.");
-  }
-
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers
   });
 
-  if ((response.status === 401 || response.status === 403) && !isAuthRequest) {
+  if (response.status === 401 || response.status === 403) {
     setToken(null);
     redirectToLogin();
-    throw new Error("Authentication required.");
+    throw new Error("ההתחברות פגה. צריך להיכנס שוב.");
   }
 
   if (!response.ok) {
@@ -72,5 +69,5 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
 
 export function getFileUrl(filePath: string) {
   const token = getToken();
-  return `http://localhost:3000/${filePath.replace(/^\/+/, "")}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+  return `${APP_URL}/${filePath.replace(/^\/+/, "")}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
 }
