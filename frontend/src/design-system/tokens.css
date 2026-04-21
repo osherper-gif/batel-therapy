@@ -1,0 +1,163 @@
+/* ============================================================
+ * BATEL Design System — Tokens
+ * Calm, therapy-oriented visual language.
+ * Earth neutrals + sage + clay. RTL-first.
+ * ============================================================ */
+
+:root {
+  /* ---------- Color — Surfaces ---------- */
+  --bg-app: #faf8f4;              /* warm ivory canvas */
+  --bg-elevated: #ffffff;         /* cards / surfaces */
+  --bg-muted: #f5f1ea;            /* soft cream — empty states, chips */
+  --bg-subtle: #f0ebe1;           /* subtle dividers, backdrops */
+  --bg-inverse: #2e3a3a;          /* dark surface for contrast */
+
+  /* ---------- Color — Text ---------- */
+  --text-strong: #2e3a3a;
+  --text: #475058;
+  --text-muted: #828a90;
+  --text-faint: #b4b9be;
+  --text-on-accent: #ffffff;
+
+  /* ---------- Color — Brand (soft sage) ---------- */
+  --sage-50: #f4f7f3;
+  --sage-100: #e6eee4;
+  --sage-200: #cddbc9;
+  --sage-300: #aec3a8;
+  --sage-400: #8ba888;
+  --sage-500: #6f9170;
+  --sage-600: #56755a;
+  --sage-700: #455e49;
+  --sage-800: #38493b;
+
+  /* ---------- Color — Accent (warm clay) ---------- */
+  --clay-50: #fbf6f0;
+  --clay-100: #f3e8d7;
+  --clay-200: #e8d1b0;
+  --clay-300: #d7b68a;
+  --clay-400: #c8a887;
+  --clay-500: #b0845f;
+  --clay-600: #8e6846;
+  --clay-700: #6e4f34;
+
+  /* ---------- Color — Lavender (soft secondary / AI / insights) ---------- */
+  --lavender-50: #f6f4f8;
+  --lavender-100: #ece7f0;
+  --lavender-200: #d8cfe1;
+  --lavender-300: #b8a9c8;
+  --lavender-400: #957f9c;
+  --lavender-500: #7b6583;
+
+  /* ---------- Color — Semantic ---------- */
+  --success-50: #eef5ee;
+  --success-100: #d7e7d8;
+  --success-500: #7ea07e;
+  --success-700: #506c52;
+
+  --warning-50: #fbf4e4;
+  --warning-100: #f3e3bf;
+  --warning-500: #d4a574;
+  --warning-700: #8c6835;
+
+  --danger-50: #f8ecea;
+  --danger-100: #f1d5d0;
+  --danger-500: #c97a6e;
+  --danger-700: #8b4a42;
+
+  --info-50: #eef3f7;
+  --info-100: #d7e1ec;
+  --info-500: #8ea5b9;
+  --info-700: #506a80;
+
+  /* ---------- Primary alias (theme color) ---------- */
+  --primary: var(--sage-500);
+  --primary-soft: var(--sage-100);
+  --primary-soft-2: var(--sage-200);
+  --primary-deep: var(--sage-700);
+  --accent: var(--clay-500);
+  --accent-soft: var(--clay-100);
+
+  /* ---------- Borders ---------- */
+  --border: #e5ded3;
+  --border-soft: #ece5d7;
+  --border-strong: #c9bfae;
+
+  /* ---------- Shadows — soft, warm ---------- */
+  --shadow-xs: 0 1px 2px rgba(72, 58, 40, 0.04);
+  --shadow-sm: 0 2px 6px rgba(72, 58, 40, 0.06);
+  --shadow-md: 0 6px 16px rgba(72, 58, 40, 0.08);
+  --shadow-lg: 0 14px 36px rgba(72, 58, 40, 0.10);
+  --shadow-focus: 0 0 0 3px rgba(139, 168, 136, 0.30);
+
+  /* ---------- Radii ---------- */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---------- Spacing (4px scale) ---------- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---------- Typography ---------- */
+  --font-sans:
+    "Assistant", "Heebo", "Rubik", "Segoe UI", Tahoma, -apple-system,
+    BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Frank Ruhl Libre", "David Libre", Georgia, serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+
+  --text-xs: 0.75rem;       /* 12 */
+  --text-sm: 0.8125rem;     /* 13 */
+  --text-base: 0.9375rem;   /* 15 */
+  --text-md: 1rem;          /* 16 */
+  --text-lg: 1.125rem;      /* 18 */
+  --text-xl: 1.25rem;       /* 20 */
+  --text-2xl: 1.5rem;       /* 24 */
+  --text-3xl: 1.875rem;     /* 30 */
+  --text-4xl: 2.25rem;      /* 36 */
+
+  --leading-tight: 1.25;
+  --leading-snug: 1.4;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------- Layout ---------- */
+  --sidebar-w: 272px;
+  --sidebar-w-compact: 84px;
+  --topbar-h: 68px;
+  --page-max: 1440px;
+
+  /* ---------- Transitions ---------- */
+  --tx-fast: 120ms cubic-bezier(0.2, 0.6, 0.2, 1);
+  --tx-base: 200ms cubic-bezier(0.2, 0.6, 0.2, 1);
+  --tx-slow: 320ms cubic-bezier(0.2, 0.6, 0.2, 1);
+
+  /* ---------- Z-index scale ---------- */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-dropdown: 500;
+  --z-drawer: 800;
+  --z-modal: 1000;
+  --z-toast: 1200;
+
+  color-scheme: light;
+}

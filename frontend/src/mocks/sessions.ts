@@ -1,0 +1,132 @@
+import type { Session } from "../types";
+
+export const mockSessions: Session[] = [
+  {
+    id: "s-101",
+    patientId: "p-001",
+    date: "2026-04-20",
+    startTime: "09:00",
+    durationMinutes: 50,
+    sessionType: "פרטני",
+    frameworkType: "קליניקה",
+    location: "חדר טיפולים",
+    attendees: "מטופלת + מטפלת",
+    goal: "עיבוד התמודדות עם מבחן בבית הספר",
+    sessionDescription:
+      "עבודה עם צבעי מים: יצירת 'מפה רגשית' של השבוע. נועה בחרה גוונים חמים לימי שני ושלישי, וקרים ליום חמישי. דיברה על תחושת 'קור בבטן' לפני מבחן.",
+    materialsUsed: "צבעי מים, דפי יצירה, ספוגים",
+    behaviorNotes:
+      "שיתוף פעולה טוב, שהייה ארוכה יותר עם הצבעים החמים. ביקשה להחזיק פריט מהטיפול הקודם.",
+    clinicalImpression:
+      "מתבססת יכולת בסיסית להבחין בין רגשות ולתת להם ייצוג ויזואלי. הקשר הטיפולי הולך ומעמיק.",
+    followUpNotes:
+      "בפגישה הבאה: המשך עבודה עם 'מפת השבוע' והוספת דמויות אנושיות.",
+    createdAt: "2026-04-20T09:00:00Z",
+    updatedAt: "2026-04-20T10:00:00Z",
+    patient: { id: "p-001", fullName: "נועה אברמוב" }
+  },
+  {
+    id: "s-102",
+    patientId: "p-002",
+    date: "2026-04-19",
+    startTime: "10:30",
+    durationMinutes: 45,
+    sessionType: "פרטני",
+    frameworkType: "מסגרת חינוכית",
+    location: "חדר רב-תכליתי בגן",
+    attendees: "מטופל + מטפלת",
+    goal: "עבודה על רגיעה וויסות דרך חומר חושני",
+    sessionDescription:
+      "שימוש בחימר: דניאל בנה 'מבצר' והעמיד בו דמויות. לאחר מכן שבר את החומה וביקש לבנות אותה מחדש.",
+    materialsUsed: "חימר, כלי עבודה פשוטים, מים",
+    behaviorNotes: "ויסות טוב יותר היום, נדרש פחות תיווך. פחות תזוזה ברמה המוטורית.",
+    clinicalImpression:
+      "חומרים חושניים כבדים ממשיכים להיות מרכזיים לתהליך הויסות.",
+    followUpNotes: "לשקול המשך עבודה עם חימר והוספת מסגור זמן ברור יותר להרס ולבנייה.",
+    createdAt: "2026-04-19T10:30:00Z",
+    updatedAt: "2026-04-19T11:30:00Z",
+    patient: { id: "p-002", fullName: "דניאל כהן" }
+  },
+  {
+    id: "s-103",
+    patientId: "p-003",
+    date: "2026-04-18",
+    startTime: "16:00",
+    durationMinutes: 50,
+    sessionType: "פרטני",
+    frameworkType: "קליניקה",
+    location: "חדר טיפולים",
+    attendees: "מטופלת + מטפלת",
+    goal: "המשך עבודה על 'ספר הסיפור החדש'",
+    sessionDescription:
+      "הוספת פרק חדש — 'החדר שלי בבית אבא'. שילוב קולאז' עם רישום עופרת.",
+    materialsUsed: "קולאז', עיתונים, עיפרון, דבק",
+    behaviorNotes: "הבעה מילולית עשירה יותר השבוע, שיתוף יזום.",
+    clinicalImpression:
+      "תהליך סימבולי מתקדם של עיבוד המעברים בין הבתים.",
+    followUpNotes: "לבדוק אפשרות לשיחה עצמאית עם האם בתיאום מראש.",
+    createdAt: "2026-04-18T16:00:00Z",
+    updatedAt: "2026-04-18T16:55:00Z",
+    patient: { id: "p-003", fullName: "מיה רוזנטל" }
+  },
+  {
+    id: "s-104",
+    patientId: "p-006",
+    date: "2026-04-17",
+    startTime: "15:30",
+    durationMinutes: 45,
+    sessionType: "פרטני",
+    frameworkType: "קליניקה",
+    location: "חדר טיפולים",
+    attendees: "מטופל + מטפלת",
+    goal: "ויסות התפרצות שאירעה בגן ביום א'",
+    sessionDescription: "ציור גדול על רצפה, תנועה מלווה. דיבור על 'שריפה שקשה לכבות בתוך הגוף'.",
+    materialsUsed: "בריסטול גדול, פסטלים שמן",
+    behaviorNotes: "בכי קצר בתחילת הפגישה, נרגע תוך כדי עבודה.",
+    clinicalImpression: "שפה רגשית חדשה — 'שריפה' — יכולה לשמש בסיס להמשך.",
+    followUpNotes: "לחזק הקבלה של 'שריפה' עם כלים חזותיים קבועים.",
+    createdAt: "2026-04-17T15:30:00Z",
+    updatedAt: "2026-04-17T16:15:00Z",
+    patient: { id: "p-006", fullName: "יונתן ברוך" }
+  },
+  {
+    id: "s-105",
+    patientId: "p-001",
+    date: "2026-04-13",
+    startTime: "09:00",
+    durationMinutes: 50,
+    sessionType: "פרטני",
+    frameworkType: "קליניקה",
+    location: "חדר טיפולים",
+    attendees: "מטופלת + מטפלת",
+    goal: "הכרות עם מפת הרגשות",
+    sessionDescription: "מעבר על כרטיסיות רגש, בחירת 3 רגשות שקרובים להיום שלה.",
+    materialsUsed: "כרטיסיות רגש, צבעי פנדה",
+    behaviorNotes: "שיתוף פעולה גבוה, יותר מילים מהרגיל.",
+    clinicalImpression: "קרקע פוריה להמשך עבודה רגשית.",
+    followUpNotes: "להמשיך לבנות אוצר רגשי חזותי.",
+    createdAt: "2026-04-13T09:00:00Z",
+    updatedAt: "2026-04-13T10:00:00Z",
+    patient: { id: "p-001", fullName: "נועה אברמוב" }
+  },
+  {
+    id: "s-106",
+    patientId: "p-004",
+    date: "2026-04-15",
+    startTime: "14:00",
+    durationMinutes: 40,
+    sessionType: "הכרות",
+    frameworkType: "קליניקה",
+    location: "חדר טיפולים",
+    attendees: "מטופל + מטפלת + אם",
+    goal: "מפגש ראשון, יצירת קשר טיפולי",
+    sessionDescription: "סיור קצר בחדר, הצגת חומרים. איתי בחר לרשום בעיפרון בלבד.",
+    materialsUsed: "עיפרון, דפים לבנים",
+    behaviorNotes: "ביישנות בולטת, נטה להיצמד לאם בתחילה, התרחק אחרי 10 דק'.",
+    clinicalImpression: "תקופת הסתגלות צפויה להיות מתונה וארוכה יותר.",
+    followUpNotes: "בפגישה הבאה — להגיע בלי הורה.",
+    createdAt: "2026-04-15T14:00:00Z",
+    updatedAt: "2026-04-15T14:40:00Z",
+    patient: { id: "p-004", fullName: "איתי פרץ" }
+  }
+];
