@@ -26,7 +26,8 @@ import {
 
 export async function listPatients(): Promise<Patient[]> {
   try {
-    return await apiFetch<Patient[]>("/patients");
+    const response = await apiFetch<{ patients: Patient[] }>("/patients");
+    return response.patients;
   } catch {
     return mockPatients;
   }
@@ -34,7 +35,8 @@ export async function listPatients(): Promise<Patient[]> {
 
 export async function getPatient(id: string): Promise<PatientDetails> {
   try {
-    return await apiFetch<PatientDetails>(`/patients/${id}`);
+    const response = await apiFetch<{ patient: PatientDetails }>(`/patients/${id}`);
+    return response.patient;
   } catch {
     const base = mockPatients.find((p) => p.id === id) || mockPatients[0];
     return {
@@ -54,6 +56,33 @@ export async function getPatient(id: string): Promise<PatientDetails> {
       images: mockImages.filter((img) => img.patientId === base.id)
     };
   }
+}
+
+export interface PatientMutationInput {
+  fullName: string;
+  dateOfBirth: string;
+  educationalFramework?: string | null;
+  frameworkType?: string | null;
+  treatmentFramework: string;
+  mainConcerns?: string | null;
+  treatmentGoals?: string | null;
+  status: string;
+}
+
+export async function createPatient(payload: PatientMutationInput): Promise<Patient> {
+  const response = await apiFetch<{ patient: Patient }>("/patients", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  return response.patient;
+}
+
+export async function updatePatient(id: string, payload: PatientMutationInput): Promise<Patient> {
+  const response = await apiFetch<{ patient: Patient }>(`/patients/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+  return response.patient;
 }
 
 // ---- Mock-only (until backend exposes these) ----

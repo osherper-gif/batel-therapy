@@ -1,6 +1,6 @@
-import { useState, useEffect, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Icon, IconName } from "../design-system/Icon";
+import { Icon, type IconName } from "../design-system/Icon";
 import { IconButton, Button } from "../design-system/Button";
 import { SearchInput } from "../design-system/SearchInput";
 import { Avatar } from "../design-system/Avatar";
@@ -39,9 +39,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "תובנות",
-    items: [
-      { to: "/ai", label: "תובנות AI", icon: "sparkles" }
-    ]
+    items: [{ to: "/ai", label: "תובנות AI", icon: "sparkles" }]
   },
   {
     label: "הגדרות",
@@ -58,17 +56,16 @@ export function AppShell({ user }: { user?: { name: string; role: string } }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Close mobile drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const currentUser = user || { name: "בטאל", role: "מטפלת באמנות" };
+
+  function handleLogout() {
     setToken(null);
     navigate("/login");
-  };
-
-  const currentUser = user || { name: "בטאל", role: "מטפלת באמנות" };
+  }
 
   return (
     <div className="app-shell">
@@ -98,18 +95,14 @@ export function AppShell({ user }: { user?: { name: string; role: string } }) {
                   to={item.to}
                   end={item.to === "/"}
                   className={({ isActive }) =>
-                    ["app-nav__item", isActive ? "app-nav__item--active" : ""]
-                      .filter(Boolean)
-                      .join(" ")
+                    ["app-nav__item", isActive ? "app-nav__item--active" : ""].filter(Boolean).join(" ")
                   }
                 >
                   <span className="app-nav__item-icon">
                     <Icon name={item.icon} size={18} />
                   </span>
                   <span>{item.label}</span>
-                  {item.count !== undefined ? (
-                    <span className="app-nav__item-count">{item.count}</span>
-                  ) : null}
+                  {item.count !== undefined ? <span className="app-nav__item-count">{item.count}</span> : null}
                 </NavLink>
               ))}
             </div>
@@ -140,10 +133,7 @@ export function AppShell({ user }: { user?: { name: string; role: string } }) {
       </aside>
 
       <div className="app-main">
-        <Topbar
-          onToggleDrawer={() => setDrawerOpen((v) => !v)}
-          onQuickAdd={() => navigate("/patients?new=1")}
-        />
+        <Topbar onToggleDrawer={() => setDrawerOpen((current) => !current)} onQuickAdd={() => navigate("/sessions/new")} />
         <div className="app-content">
           <Outlet />
         </div>
@@ -159,13 +149,11 @@ function Topbar({
   onToggleDrawer: () => void;
   onQuickAdd?: () => void;
 }) {
+  const navigate = useNavigate();
+
   return (
     <header className="app-topbar">
-      <button
-        className="app-topbar__mobile-toggle"
-        onClick={onToggleDrawer}
-        aria-label="פתיחת תפריט"
-      >
+      <button className="app-topbar__mobile-toggle" onClick={onToggleDrawer} aria-label="פתיחת תפריט">
         <Icon name="menu" size={20} />
       </button>
 
@@ -174,10 +162,15 @@ function Topbar({
       </div>
 
       <div className="app-topbar__actions">
-        <Button variant="ghost" size="sm" iconStart={<Icon name="calendar" size={16} />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          iconStart={<Icon name="calendar" size={16} />}
+          onClick={() => navigate("/sessions")}
+        >
           היום
         </Button>
-        <IconButton aria-label="התראות" style={{ position: "relative" }}>
+        <IconButton aria-label="התראות" style={{ position: "relative" }} onClick={() => navigate("/notifications")}>
           <Icon name="bell" size={18} />
           <span
             style={{
@@ -191,12 +184,7 @@ function Topbar({
             }}
           />
         </IconButton>
-        <Button
-          variant="primary"
-          size="sm"
-          iconStart={<Icon name="plus" size={16} />}
-          onClick={onQuickAdd}
-        >
+        <Button variant="primary" size="sm" iconStart={<Icon name="plus" size={16} />} onClick={onQuickAdd}>
           הוספה מהירה
         </Button>
       </div>
@@ -204,7 +192,6 @@ function Topbar({
   );
 }
 
-// Small helper used by inner pages — pretty breadcrumb chip
 export function Breadcrumb({
   items
 }: {
@@ -220,18 +207,15 @@ export function Breadcrumb({
         fontSize: "var(--text-sm)"
       }}
     >
-      {items.map((it, i) => (
-        <span
-          key={i}
-          style={{ display: "flex", alignItems: "center", gap: 6 }}
-        >
-          {i > 0 ? <Icon name="chevronLeft" size={14} /> : null}
-          {it.to ? (
-            <NavLink to={it.to} style={{ color: "var(--text-muted)" }}>
-              {it.label}
+      {items.map((item, index) => (
+        <span key={`${item.label}-${index}`} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {index > 0 ? <Icon name="chevronLeft" size={14} /> : null}
+          {item.to ? (
+            <NavLink to={item.to} style={{ color: "var(--text-muted)" }}>
+              {item.label}
             </NavLink>
           ) : (
-            <span style={{ color: "var(--text-strong)" }}>{it.label}</span>
+            <span style={{ color: "var(--text-strong)" }}>{item.label}</span>
           )}
         </span>
       ))}
@@ -239,5 +223,4 @@ export function Breadcrumb({
   );
 }
 
-// Re-export Badge for convenience elsewhere
 export { Badge };

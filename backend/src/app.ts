@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import fs from "node:fs";
 import path from "node:path";
-import { env } from "./config.js";
+import { corsOrigins, env, isProduction } from "./config.js";
 import { requireAuth } from "./middleware/auth.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { authRouter } from "./routes/auth.js";
@@ -13,13 +13,22 @@ import { patientsRouter } from "./routes/patients.js";
 import { stakeholdersRouter } from "./routes/stakeholders.js";
 import { sessionsRouter } from "./routes/sessions.js";
 import { filesRouter } from "./routes/files.js";
+import { publicAssetsRouter } from "./routes/public-assets.js";
 import { uploadsPath } from "./uploads.js";
 
 export const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin(origin, callback) {
+      if (!origin || corsOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true
   })
 );
@@ -30,9 +39,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", requireAuth, express.static(uploadsPath));
 
 app.get("/health", (_request, response) => {
-  response.json({ ok: true });
+  response.json({
+    ok: true,
+    service: "batel-api",
+    environment: isProduction ? "production" : "development",
+    timestamp: new Date().toISOString()
+  });
 });
 
+app.use("/public", publicAssetsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/dashboard", requireAuth, dashboardRouter);
 app.use("/api/patients", requireAuth, patientsRouter);

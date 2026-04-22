@@ -1,21 +1,23 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
 import { calculateAge } from "../utils/date.js";
+import { asyncHandler } from "../utils/async-handler.js";
 import { patientSchema } from "../validation/patient.js";
 
 export const patientsRouter = Router();
 
-patientsRouter.get("/", async (_request, response) => {
+patientsRouter.get("/", asyncHandler(async (_request, response) => {
   const patients = await prisma.patient.findMany({
     orderBy: { updatedAt: "desc" }
   });
 
   return response.json({ patients });
-});
+}));
 
-patientsRouter.get("/:id", async (request, response) => {
+patientsRouter.get("/:id", asyncHandler(async (request, response) => {
+  const patientId = String(request.params.id);
   const patient = await prisma.patient.findUnique({
-    where: { id: request.params.id },
+    where: { id: patientId },
     include: {
       patientContacts: {
         orderBy: {
@@ -38,9 +40,9 @@ patientsRouter.get("/:id", async (request, response) => {
   }
 
   return response.json({ patient });
-});
+}));
 
-patientsRouter.post("/", async (request, response) => {
+patientsRouter.post("/", asyncHandler(async (request, response) => {
   const payload = patientSchema.parse(request.body);
 
   const patient = await prisma.patient.create({
@@ -56,13 +58,14 @@ patientsRouter.post("/", async (request, response) => {
   });
 
   return response.status(201).json({ patient });
-});
+}));
 
-patientsRouter.put("/:id", async (request, response) => {
+patientsRouter.put("/:id", asyncHandler(async (request, response) => {
+  const patientId = String(request.params.id);
   const payload = patientSchema.parse(request.body);
 
   const patient = await prisma.patient.update({
-    where: { id: request.params.id },
+    where: { id: patientId },
     data: {
       ...payload,
       dateOfBirth: new Date(payload.dateOfBirth),
@@ -75,12 +78,13 @@ patientsRouter.put("/:id", async (request, response) => {
   });
 
   return response.json({ patient });
-});
+}));
 
-patientsRouter.delete("/:id", async (request, response) => {
+patientsRouter.delete("/:id", asyncHandler(async (request, response) => {
+  const patientId = String(request.params.id);
   await prisma.patient.delete({
-    where: { id: request.params.id }
+    where: { id: patientId }
   });
 
   return response.status(204).send();
-});
+}));

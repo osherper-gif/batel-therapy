@@ -4,7 +4,7 @@ import { EntityTable } from "../components/EntityTable";
 import { SectionCard } from "../components/SectionCard";
 import { StatusMessage } from "../components/StatusMessage";
 import { useAsync } from "../hooks/useAsync";
-import { apiFetch, getFileUrl, getToken } from "../lib/api";
+import { apiFetch, getBackendOrigin, getFileUrl, getToken } from "../lib/api";
 import { mapErrorToHebrew } from "../lib/ui-text";
 import type { Contact, PatientDetails } from "../types";
 
@@ -18,7 +18,7 @@ const tabs = [
 
 async function uploadToEndpoint(endpoint: string, formData: FormData) {
   const token = getToken();
-  const response = await fetch(`http://localhost:4000/api/files/${endpoint}`, {
+  const response = await fetch(`${getBackendOrigin()}/api/files/${endpoint}`, {
     method: "POST",
     body: formData,
     headers: token ? { Authorization: `Bearer ${token}` } : undefined

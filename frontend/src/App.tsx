@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./layouts/AppShell";
 import { PatientWorkspace } from "./layouts/PatientWorkspace";
 import { getToken } from "./lib/api";
@@ -32,6 +32,7 @@ import { TasksPage } from "./pages/tasks/TasksPage";
 import { SettingsPage } from "./pages/settings/SettingsPage";
 import { NotificationsPage } from "./pages/notifications/NotificationsPage";
 import { PublicPagesPage } from "./pages/publicPages/PublicPagesPage";
+import { PublicSiteHubPage } from "./pages/publicSite/PublicSiteHubPage";
 
 function ProtectedRoute() {
   if (!getToken()) {
@@ -44,6 +45,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/site/*" element={<PublicSiteHubPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/patients" element={<PatientsListPage />} />
@@ -79,3 +81,4 @@ export function App() {
     </Routes>
   );
 }
+

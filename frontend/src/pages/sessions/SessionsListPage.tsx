@@ -1,70 +1,93 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../design-system/PageHeader";
-import { Card, CardBody } from "../../design-system/Card";
+import { Card, CardBody, CardHeader } from "../../design-system/Card";
 import { Button } from "../../design-system/Button";
-import { SearchInput } from "../../design-system/SearchInput";
-import { Segmented } from "../../design-system/Tabs";
-import { Avatar } from "../../design-system/Avatar";
 import { Badge } from "../../design-system/Badge";
-import { Icon } from "../../design-system/Icon";
 import { EmptyState } from "../../design-system/EmptyState";
-import { SkeletonRows } from "../../design-system/Skeleton";
+import { Icon } from "../../design-system/Icon";
+import { SearchInput } from "../../design-system/SearchInput";
+import { Skeleton } from "../../design-system/Skeleton";
+import { showPlaceholderMessage } from "../../lib/uiActions";
 import { listSessions } from "../../services/sessionsService";
 import type { Session } from "../../types";
 
-type View = "cards" | "list";
+function formatSessionDate(value: string) {
+  return new Date(value).toLocaleDateString("he-IL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+}
 
 export function SessionsListPage() {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoading, setLoading] = useState(true);
-  const [view, setView] = useState<View>("cards");
-  const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [query, setQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let alive = true;
-    setLoading(true);
+    let active = true;
+    setIsLoading(true);
+
     listSessions()
-      .then((s) => alive && setSessions(s))
-      .finally(() => alive && setLoading(false));
+      .then((items) => {
+        if (active) {
+          setSessions(items);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setSessions([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
     return () => {
-      alive = false;
+      active = false;
     };
   }, []);
 
-  const grouped = useMemo(() => {
-    const q = query.trim();
-    const filtered = sessions.filter(
-      (s) =>
-        !q ||
-        (s.patient?.fullName && s.patient.fullName.includes(q)) ||
-        (s.goal && s.goal.includes(q))
+  const filteredSessions = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return sessions;
+    }
+
+    return sessions.filter((session) =>
+      [
+        session.patient?.fullName,
+        session.goal,
+        session.sessionDescription,
+        session.sessionType,
+        session.location
+      ]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(normalizedQuery))
     );
-    const map = new Map<string, Session[]>();
-    filtered.forEach((s) => {
-      const key = s.date;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(s);
-    });
-    return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1));
-  }, [sessions, query]);
+  }, [query, sessions]);
 
   return (
     <div className="ds-page">
       <PageHeader
-        eyebrow="מרחב עבודה"
+        eyebrow="יומן טיפולי"
         title="מפגשים"
-        subtitle="תיעוד מפגשים מהיום ומהימים האחרונים."
+        subtitle="כל המפגשים במקום אחד, עם חיפוש מהיר וגישה לעריכה."
         actions={
           <>
             <Button
-              variant="secondary"
-              iconStart={<Icon name="calendar" size={16} />}
+              variant="ghost"
+              onClick={() => showPlaceholderMessage("מסננים מתקדמים עדיין לא מומשו.")}
             >
-              יומן שבועי
+              מסננים מתקדמים
             </Button>
             <Button
+              data-testid="sessions-new-session"
               iconStart={<Icon name="plus" size={16} />}
               onClick={() => navigate("/sessions/new")}
             >
@@ -81,27 +104,18 @@ export function SessionsListPage() {
               display: "flex",
               gap: 12,
               alignItems: "center",
+              justifyContent: "space-between",
               flexWrap: "wrap"
             }}
           >
             <div style={{ flex: 1, minWidth: 240 }}>
               <SearchInput
-                placeholder="חיפוש לפי שם מטופל או מטרה"
+                placeholder="חיפוש לפי מטופל/ת, מטרה, תיאור או סוג מפגש..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
               />
             </div>
-            <Segmented<View>
-              value={view}
-              onChange={setView}
-              items={[
-                { value: "cards", label: "כרטיסים" },
-                { value: "list", label: "רשימה" }
-              ]}
-            />
-            <Button variant="ghost" iconStart={<Icon name="filter" size={16} />}>
-              מסננים
-            </Button>
+            <Badge tone="sage">{filteredSessions.length} מפגשים</Badge>
           </div>
         </CardBody>
       </Card>
@@ -109,164 +123,68 @@ export function SessionsListPage() {
       {isLoading ? (
         <Card>
           <CardBody>
-            <SkeletonRows count={4} height={72} />
+            <Skeleton height={280} />
           </CardBody>
         </Card>
-      ) : grouped.length === 0 ? (
+      ) : filteredSessions.length === 0 ? (
         <Card>
           <CardBody>
             <EmptyState
               icon="calendar"
-              title="לא נמצאו מפגשים"
-              description={query ? `אין תוצאות לחיפוש "${query}".` : "התחילי בהוספת מפגש חדש."}
+              title="עדיין אין מפגשים להצגה"
+              description="אפשר ליצור מפגש חדש או לשנות את החיפוש כדי לראות תוצאות קיימות."
+              action={
+                <Button
+                  data-testid="sessions-new-session"
+                  iconStart={<Icon name="plus" size={16} />}
+                  onClick={() => navigate("/sessions/new")}
+                >
+                  מפגש חדש
+                </Button>
+              }
             />
           </CardBody>
         </Card>
       ) : (
-        <div className="ds-col">
-          {grouped.map(([date, list]) => (
-            <section key={date} className="ds-col ds-col--sm">
-              <DayHeader date={date} count={list.length} />
-              {view === "cards" ? (
-                <div className="ds-grid ds-grid--2">
-                  {list.map((s) => (
-                    <SessionCardView
-                      key={s.id}
-                      session={s}
-                      onClick={() => navigate(`/sessions/${s.id}`)}
-                    />
-                  ))}
+        <div className="ds-grid ds-grid--2">
+          {filteredSessions.map((session) => (
+            <Card
+              key={session.id}
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate(`/sessions/${session.id}`)}
+            >
+              <CardHeader
+                title={session.goal || session.sessionType}
+                subtitle={`${formatSessionDate(session.date)} · ${session.startTime}`}
+                eyebrow={session.patient?.fullName || "ללא שיוך"}
+                actions={<Badge tone="clay">{session.sessionType}</Badge>}
+              />
+              <CardBody compact>
+                <div className="ds-col ds-col--xs">
+                  <div className="ds-t-sm">
+                    <strong>מטופל/ת:</strong> {session.patient?.fullName || "לא הוגדר"}
+                  </div>
+                  <div className="ds-t-sm">
+                    <strong>משך:</strong> {session.durationMinutes} דקות
+                  </div>
+                  <div className="ds-t-sm">
+                    <strong>מיקום:</strong> {session.location || "לא צוין"}
+                  </div>
+                  <div className="ds-t-sm ds-t-muted" style={{ lineHeight: 1.6 }}>
+                    {session.sessionDescription || "אין עדיין תיאור מפגש."}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                    <Badge tone="sage">{session.frameworkType || "מסגרת לא הוגדרה"}</Badge>
+                    <Button variant="ghost" size="sm" iconEnd={<Icon name="chevronLeft" size={14} />}>
+                      פתיחת מפגש
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <Card>
-                  <CardBody compact>
-                    <div className="ds-col ds-col--sm">
-                      {list.map((s) => (
-                        <div
-                          key={s.id}
-                          className="ds-list-row"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => navigate(`/sessions/${s.id}`)}
-                        >
-                          <Avatar name={s.patient?.fullName} />
-                          <div style={{ flex: 1 }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: 8,
-                                alignItems: "center"
-                              }}
-                            >
-                              <strong>{s.patient?.fullName}</strong>
-                              <Badge tone="sage">{s.sessionType}</Badge>
-                            </div>
-                            <p className="ds-t-sm ds-t-muted">
-                              {s.goal || s.sessionDescription || "—"}
-                            </p>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "var(--text-xs)",
-                              color: "var(--text-muted)"
-                            }}
-                          >
-                            {s.startTime}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardBody>
-                </Card>
-              )}
-            </section>
+              </CardBody>
+            </Card>
           ))}
         </div>
       )}
     </div>
-  );
-}
-
-function DayHeader({ date, count }: { date: string; count: number }) {
-  const d = new Date(date);
-  const isToday = d.toDateString() === new Date().toDateString();
-  const label = d.toLocaleDateString("he-IL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long"
-  });
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        paddingInline: 4
-      }}
-    >
-      <h3
-        style={{
-          fontSize: "var(--text-md)",
-          color: "var(--text-strong)",
-          fontWeight: 600
-        }}
-      >
-        {label}
-      </h3>
-      {isToday ? <Badge tone="sage">היום</Badge> : null}
-      <span className="ds-t-xs ds-t-muted">
-        {count} מפגש{count !== 1 ? "ים" : ""}
-      </span>
-    </div>
-  );
-}
-
-function SessionCardView({ session, onClick }: { session: Session; onClick: () => void }) {
-  return (
-    <Card style={{ cursor: "pointer" }} onClick={onClick}>
-      <CardBody>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <Avatar name={session.patient?.fullName} size="lg" />
-          <div style={{ flex: 1 }}>
-            <strong style={{ fontSize: "var(--text-lg)" }}>
-              {session.patient?.fullName}
-            </strong>
-            <div className="ds-t-sm ds-t-muted">
-              {session.startTime} · {session.durationMinutes} דק'
-              {session.frameworkType ? ` · ${session.frameworkType}` : ""}
-            </div>
-          </div>
-          <Badge tone="sage">{session.sessionType}</Badge>
-        </div>
-        <div
-          style={{
-            background: "var(--bg-muted)",
-            padding: "var(--space-3)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "var(--text-sm)",
-            lineHeight: 1.6,
-            color: "var(--text)"
-          }}
-        >
-          <strong>מטרה: </strong>
-          {session.goal || "—"}
-        </div>
-        {session.clinicalImpression ? (
-          <p
-            style={{
-              marginTop: 10,
-              fontSize: "var(--text-sm)",
-              color: "var(--text-muted)",
-              lineHeight: 1.5,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical" as const,
-              overflow: "hidden"
-            }}
-          >
-            {session.clinicalImpression}
-          </p>
-        ) : null}
-      </CardBody>
-    </Card>
   );
 }

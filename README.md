@@ -87,3 +87,10 @@ If you keep the sample `.env` values, the first login is:
 - WhatsApp reminders can plug into the session and stakeholder tables through an outbound reminders table.
 - Google Drive backup can later sync the `uploads/` folder and SQLite snapshots.
 - Billing can be added with invoice and payment models linked to patients and sessions.
+
+## Production deployment
+
+Production deployment assets, env templates, DNS guidance, SEO files and launch checklist are documented in:
+
+- `docs/PRODUCTION_DEPLOYMENT.md`
+- `docs/LAUNCH_CHECKLIST.md`

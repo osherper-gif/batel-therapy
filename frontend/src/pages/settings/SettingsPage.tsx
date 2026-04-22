@@ -9,6 +9,7 @@ import { Icon } from "../../design-system/Icon";
 import { Field, TextInput, TextArea, SelectInput } from "../../design-system/Field";
 import { Callout } from "../../design-system/Callout";
 import { Progress } from "../../design-system/Progress";
+import { showPlaceholderMessage } from "../../lib/uiActions";
 
 type Section =
   | "profile"
@@ -27,7 +28,7 @@ export function SettingsPage() {
       <PageHeader
         eyebrow="הגדרות"
         title="הגדרות המרחב"
-        subtitle="פרופיל, התראות, העדפות AI, פרטיות, צוות ותיעוד שינויים."
+        subtitle="פרופיל, התראות, עדפות AI, פרטיות, צוות ותיעוד שינויים."
       />
 
       <Card>
@@ -70,7 +71,7 @@ function ProfileSection() {
               <TextInput defaultValue="בטאל כהן" />
             </Field>
             <Field label="תואר מקצועי">
-              <TextInput defaultValue="מטפלת באומנות, M.A." />
+              <TextInput defaultValue="מטפלת באמנות, M.A." />
             </Field>
             <Field label="מספר רישום">
               <TextInput defaultValue="IL-2021-4287" />
@@ -90,22 +91,19 @@ function ProfileSection() {
           </div>
           <div style={{ marginTop: 16 }}>
             <Field label="חתימת דוחות">
-              <TextArea
-                rows={3}
-                defaultValue="בטאל כהן, מטפלת באומנות&#10;רישום משרד הבריאות 4287"
-              />
+              <TextArea rows={3} defaultValue={"בטאל כהן, מטפלת באמנות\nרישום משרד הבריאות 4287"} />
             </Field>
           </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              marginTop: 16,
-              justifyContent: "flex-end"
-            }}
-          >
-            <Button variant="ghost">ביטול</Button>
-            <Button iconStart={<Icon name="save" size={16} />}>שמירה</Button>
+          <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
+            <Button variant="ghost" onClick={() => showPlaceholderMessage("ביטול שינויים מקומיים עדיין לא ממומש.")}>
+              ביטול
+            </Button>
+            <Button
+              iconStart={<Icon name="save" size={16} />}
+              onClick={() => showPlaceholderMessage("שמירת פרופיל מלאה תתווסף בהמשך. כרגע זה מסך תצורה בלבד.")}
+            >
+              שמירה
+            </Button>
           </div>
         </CardBody>
       </Card>
@@ -113,17 +111,15 @@ function ProfileSection() {
       <Card>
         <CardHeader title="תמונת פרופיל" />
         <CardBody compact>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 12,
-              paddingBlock: 12
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingBlock: 12 }}>
             <Avatar name="בטאל כהן" size="xl" />
-            <Button variant="secondary" iconStart={<Icon name="upload" size={14} />}>
+            <Button
+              variant="secondary"
+              iconStart={<Icon name="upload" size={14} />}
+              onClick={() =>
+                showPlaceholderMessage("החלפת תמונת פרופיל עדיין לא נתמכת. אין כרגע העלאה אמיתית לתמונת משתמש.")
+              }
+            >
               החלפת תמונה
             </Button>
             <span className="ds-t-xs ds-t-muted">PNG או JPG עד 2MB</span>
@@ -135,48 +131,20 @@ function ProfileSection() {
 }
 
 function NotificationsSection() {
+  const items = [
+    "תזכורת למפגש קרוב",
+    "משימה דחופה",
+    "הודעה מהורה",
+    "תובנה חדשה מ-BATEL AI"
+  ];
   return (
     <Card>
-      <CardHeader
-        title="התראות"
-        subtitle="מתי ואיך המערכת תעדכן אותך על פעילות."
-      />
+      <CardHeader title="התראות" subtitle="מתי ואיך המערכת תעדכן אותך על פעילות." />
       <CardBody>
         <div className="ds-col ds-col--sm">
-          {[
-            {
-              title: "תזכורת למפגש קרוב",
-              desc: "התראה 30 דקות לפני מפגש מתוכנן",
-              on: true
-            },
-            {
-              title: "משימה דחופה",
-              desc: "כאשר מופיעה משימה בעדיפות גבוהה",
-              on: true
-            },
-            {
-              title: "הודעה מהורה",
-              desc: "כאשר הורה מבקש שיחה דרך מרחב הציבורי",
-              on: true
-            },
-            {
-              title: "תובנה חדשה מ-BATEL AI",
-              desc: "עדכון שבועי תקציר + תובנות דורשות סקירה",
-              on: true
-            },
-            {
-              title: "דוח מוכן לסקירה",
-              desc: "כאשר טיוטה אוטומטית מוכנה",
-              on: false
-            },
-            {
-              title: "עדכון ממערכת חיצונית",
-              desc: "סנכרון יומן / מייל / פלטפורמה חיצונית",
-              on: false
-            }
-          ].map((n, i) => (
+          {items.map((item) => (
             <div
-              key={i}
+              key={item}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -186,27 +154,16 @@ function NotificationsSection() {
                 borderRadius: "var(--radius-md)"
               }}
             >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "var(--radius-md)",
-                  background: n.on ? "var(--sage-100)" : "var(--bg-subtle)",
-                  color: n.on ? "var(--sage-700)" : "var(--text-muted)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-              >
-                <Icon name="bell" size={16} />
-              </div>
               <div style={{ flex: 1 }}>
-                <strong>{n.title}</strong>
-                <p className="ds-t-sm ds-t-muted" style={{ marginTop: 2 }}>
-                  {n.desc}
-                </p>
+                <strong>{item}</strong>
               </div>
-              <Toggle on={n.on} />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => showPlaceholderMessage("ניהול granular של התראות עדיין לא מחובר לשרת הגדרות אמיתי.")}
+              >
+                הגדרה
+              </Button>
             </div>
           ))}
         </div>
@@ -219,58 +176,25 @@ function AISection() {
   return (
     <div className="ds-col">
       <Callout tone="lavender" title="הגדרות BATEL AI">
-        אפשר לשלוט מה המודל רואה, מה הוא מציע, ומתי הוא יוצר תובנות. כל שינוי
-        כאן תקף למטפלת זו בלבד, ונשמר ביומן הגדרות.
+        אפשר לשלוט מה המודל רואה, מה הוא מציע, ומתי הוא יוצר תובנות. כל שינוי כאן ייכנס כהגדרה אמיתית רק אחרי חיבור backend.
       </Callout>
-
       <Card>
         <CardHeader title="רגישות תובנות" subtitle="מתי להציג תובנות ובאיזו ודאות." />
         <CardBody>
-          <div className="ds-col ds-col--md">
-            <Field label="סף ודאות מינימלי להצגת תובנה">
+          <div className="ds-form-grid ds-form-grid--2">
+            <Field label="סף ודאות מינימלי">
               <SelectInput defaultValue="medium">
-                <option value="low">נמוך — להציג כל תובנה</option>
-                <option value="medium">בינוני — ברירת מחדל</option>
-                <option value="high">גבוה בלבד</option>
+                <option value="low">נמוך</option>
+                <option value="medium">בינוני</option>
+                <option value="high">גבוה</option>
               </SelectInput>
             </Field>
-            <Field label="מספר מפגשים מינימלי לפני יצירת תובנה">
+            <Field label="מספר מפגשים לפני תובנה">
               <TextInput type="number" defaultValue={3} min={1} max={10} />
             </Field>
           </div>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader title="סוגי תובנות פעילים" />
-        <CardBody>
-          <div className="ds-grid ds-grid--2">
-            {[
-              { label: "דפוסים חוזרים", desc: "זיהוי מגמות בחומרים, צבעים, נושאים." },
-              { label: "המלצות", desc: "הצעות להמשך — חומרים, מסגור, מטרות." },
-              { label: "אזהרות", desc: "סימנים של מצוקה, סיכון, או צורך בהתייעצות." },
-              { label: "תקצירים שבועיים", desc: "סיכום שבועי של הפעילות שלך." }
-            ].map((k, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "var(--space-4)",
-                  border: "1px solid var(--border-soft)",
-                  borderRadius: "var(--radius-md)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 12
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <strong>{k.label}</strong>
-                  <p className="ds-t-sm ds-t-muted" style={{ marginTop: 2 }}>
-                    {k.desc}
-                  </p>
-                </div>
-                <Toggle on={true} />
-              </div>
-            ))}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+            <Button onClick={() => showPlaceholderMessage("שמירת הגדרות AI עדיין לא זמינה בצד השרת.")}>שמירת הגדרות AI</Button>
           </div>
         </CardBody>
       </Card>
@@ -281,38 +205,34 @@ function AISection() {
 function TeamSection() {
   const team = [
     { name: "בטאל כהן", role: "מטפלת ראשית (מנהלת)", status: "active" },
-    { name: "שיר ועד", role: "מטפלת באומנות", status: "active" },
+    { name: "שיר ועד", role: "מטפלת באמנות", status: "active" },
     { name: "ד״ר איריס לב", role: "מפקחת מקצועית", status: "invited" }
   ];
+
   return (
     <Card>
       <CardHeader
         title="חברי צוות"
         subtitle="ניהול הרשאות והזמנת מטפלות נוספות למרחב."
         actions={
-          <Button iconStart={<Icon name="plus" size={16} />}>הזמנת מטפלת</Button>
+          <Button iconStart={<Icon name="plus" size={16} />} onClick={() => showPlaceholderMessage("הזמנת משתמשים נוספים עדיין לא מחוברת ל-flow הרשאות אמיתי.")}>
+            הזמנת מטפלת
+          </Button>
         }
       />
       <CardBody compact>
         <div className="ds-col ds-col--sm">
-          {team.map((t, i) => (
-            <div
-              key={i}
-              className="ds-list-row"
-              style={{
-                padding: "var(--space-4)",
-                border: "1px solid var(--border-soft)"
-              }}
-            >
-              <Avatar name={t.name} size="md" />
+          {team.map((member) => (
+            <div key={member.name} className="ds-list-row" style={{ padding: "var(--space-4)", border: "1px solid var(--border-soft)" }}>
+              <Avatar name={member.name} size="md" />
               <div style={{ flex: 1 }}>
-                <strong>{t.name}</strong>
-                <div className="ds-t-xs ds-t-muted">{t.role}</div>
+                <strong>{member.name}</strong>
+                <div className="ds-t-xs ds-t-muted">{member.role}</div>
               </div>
-              <Badge tone={t.status === "active" ? "success" : "warning"}>
-                {t.status === "active" ? "פעיל" : "ממתין"}
+              <Badge tone={member.status === "active" ? "success" : "warning"}>
+                {member.status === "active" ? "פעיל" : "ממתין"}
               </Badge>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => showPlaceholderMessage("עריכת חבר צוות עדיין לא זמינה.")}>
                 עריכה
               </Button>
             </div>
@@ -327,18 +247,14 @@ function PrivacySection() {
   return (
     <div className="ds-col">
       <Callout tone="sage" title="הגנה על מידע רגיש">
-        המידע נשמר מוצפן בצד שרת. גישה לדוחות חיצוניים דורשת אישור דו-שלבי.
-        לעולם לא נשתמש במידע טיפולי שלא אושר להכשרת מודלים.
+        המידע נשמר מוצפן בצד שרת. גישה לדוחות חיצוניים דורשת אישור דו-שלבי. לעולם לא נשתמש במידע טיפולי ללא אישור מפורש.
       </Callout>
       <div className="ds-grid ds-grid--2">
         <Card>
           <CardHeader title="אחסון" subtitle="נפח שימוש נוכחי." />
           <CardBody>
             <Progress value={62} />
-            <div
-              className="ds-t-xs ds-t-muted"
-              style={{ marginTop: 6, display: "flex", justifyContent: "space-between" }}
-            >
+            <div className="ds-t-xs ds-t-muted" style={{ marginTop: 6, display: "flex", justifyContent: "space-between" }}>
               <span>12.4 GB מתוך 20 GB</span>
               <span>62%</span>
             </div>
@@ -347,6 +263,7 @@ function PrivacySection() {
               style={{ marginTop: 12 }}
               iconStart={<Icon name="upload" size={14} />}
               block
+              onClick={() => showPlaceholderMessage("שדרוג חבילה עדיין לא זמין בגרסה המקומית הזו.")}
             >
               שדרוג חבילה
             </Button>
@@ -365,6 +282,7 @@ function PrivacySection() {
               style={{ marginTop: 12 }}
               iconStart={<Icon name="download" size={14} />}
               block
+              onClick={() => showPlaceholderMessage("הורדת גיבוי עדיין לא נתמכת מתוך המסך הזה.")}
             >
               הורדת גיבוי
             </Button>
@@ -382,14 +300,15 @@ function IntegrationsSection() {
     { name: "WhatsApp Business", status: "לא מחובר", tone: "muted" as const, icon: "messageCircle" as const },
     { name: "Zoom", status: "לא מחובר", tone: "muted" as const, icon: "play" as const }
   ];
+
   return (
     <Card>
       <CardHeader title="חיבורים חיצוניים" />
       <CardBody>
         <div className="ds-grid ds-grid--2">
-          {items.map((it, i) => (
+          {items.map((item) => (
             <div
-              key={i}
+              key={item.name}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -410,16 +329,22 @@ function IntegrationsSection() {
                   justifyContent: "center"
                 }}
               >
-                <Icon name={it.icon} size={18} />
+                <Icon name={item.icon} size={18} />
               </div>
               <div style={{ flex: 1 }}>
-                <strong>{it.name}</strong>
+                <strong>{item.name}</strong>
                 <div className="ds-t-xs">
-                  <Badge tone={it.tone}>{it.status}</Badge>
+                  <Badge tone={item.tone}>{item.status}</Badge>
                 </div>
               </div>
-              <Button variant="secondary" size="sm">
-                {it.status === "מחובר" ? "ניהול" : "חיבור"}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  showPlaceholderMessage(item.status === "מחובר" ? "ניהול חיבור זה עדיין לא זמין." : "חיבור האינטגרציה הזו עדיין לא מומש.")
+                }
+              >
+                {item.status === "מחובר" ? "ניהול" : "חיבור"}
               </Button>
             </div>
           ))}
@@ -433,81 +358,38 @@ function AuditSection() {
   const items = [
     { when: "2026-04-19 14:22", actor: "בטאל כהן", action: "עדכון דוח — דוח רבעון ב׳ / נועה אברמוב" },
     { when: "2026-04-19 10:50", actor: "בטאל כהן", action: "יצירת משימה — תיאום עם גן 'שלום'" },
-    { when: "2026-04-18 18:05", actor: "BATEL AI", action: "תובנה חדשה — 'שפה רגשית חדשה' אצל יונתן" },
-    { when: "2026-04-18 09:15", actor: "בטאל כהן", action: "התחברות מדפדפן Chrome" },
-    { when: "2026-04-17 21:00", actor: "מערכת", action: "גיבוי אוטומטי הושלם" }
+    { when: "2026-04-18 18:05", actor: "BATEL AI", action: "תובנה חדשה — 'שפה רגשית חדשה' אצל יונתן" }
   ];
+
   return (
     <Card>
       <CardHeader
         title="יומן שינויים (Audit log)"
         subtitle="תיעוד מלא של פעולות אחרונות — לצורכי שקיפות ובטיחות."
         actions={
-          <Button variant="secondary" iconStart={<Icon name="download" size={14} />}>
+          <Button
+            variant="secondary"
+            iconStart={<Icon name="download" size={14} />}
+            onClick={() => showPlaceholderMessage("ייצוא Audit log מלא עדיין לא זמין מתוך המסך הזה.")}
+          >
             ייצוא
           </Button>
         }
       />
       <CardBody compact>
         <div className="ds-timeline" style={{ marginInlineStart: 8 }}>
-          {items.map((it, i) => (
-            <div key={i} className="ds-timeline__item">
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  marginBottom: 2
-                }}
-              >
-                <strong style={{ fontSize: "var(--text-sm)" }}>{it.actor}</strong>
-                <span className="ds-t-xs ds-t-muted">{it.when}</span>
+          {items.map((item) => (
+            <div key={`${item.when}-${item.actor}`} className="ds-timeline__item">
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 2 }}>
+                <strong style={{ fontSize: "var(--text-sm)" }}>{item.actor}</strong>
+                <span className="ds-t-xs ds-t-muted">{item.when}</span>
               </div>
-              <p
-                style={{
-                  fontSize: "var(--text-sm)",
-                  color: "var(--text)",
-                  margin: 0
-                }}
-              >
-                {it.action}
-              </p>
+              <p style={{ fontSize: "var(--text-sm)", color: "var(--text)", margin: 0 }}>{item.action}</p>
             </div>
           ))}
         </div>
       </CardBody>
     </Card>
-  );
-}
-
-function Toggle({ on }: { on: boolean }) {
-  return (
-    <div
-      role="switch"
-      aria-checked={on}
-      style={{
-        width: 44,
-        height: 26,
-        borderRadius: 999,
-        background: on ? "var(--sage-500)" : "var(--bg-subtle)",
-        padding: 3,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: on ? "flex-end" : "flex-start",
-        transition: "all 160ms ease",
-        cursor: "pointer"
-      }}
-    >
-      <div
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: 999,
-          background: "#fff",
-          boxShadow: "var(--shadow-xs)"
-        }}
-      />
-    </div>
   );
 }
 

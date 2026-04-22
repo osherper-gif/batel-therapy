@@ -9,14 +9,15 @@ import { Avatar } from "../../design-system/Avatar";
 import { Icon } from "../../design-system/Icon";
 import { EmptyState } from "../../design-system/EmptyState";
 import { mockDocuments, mockImages } from "../../mocks";
+import { downloadJson, showPlaceholderMessage } from "../../lib/uiActions";
 
 type View = "documents" | "artwork";
 type Filter = "all" | "form" | "report" | "plan";
 
-const docTypeTone = (t: string) => {
-  if (t.includes("טופס")) return "info" as const;
-  if (t.includes("דוח")) return "lavender" as const;
-  if (t.includes("תכנית")) return "sage" as const;
+const docTypeTone = (value: string) => {
+  if (value.includes("טופס")) return "info" as const;
+  if (value.includes("דוח")) return "lavender" as const;
+  if (value.includes("תכנית")) return "sage" as const;
   return "muted" as const;
 };
 
@@ -26,29 +27,26 @@ export function DocumentsPage() {
   const [query, setQuery] = useState("");
 
   const documents = useMemo(() => {
-    const q = query.trim();
-    return mockDocuments.filter((d) => {
-      const passQ =
-        !q ||
-        d.title.includes(q) ||
-        (d.patient?.fullName || "").includes(q) ||
-        (d.tags || "").includes(q);
-      const passF =
+    const normalizedQuery = query.trim();
+    return mockDocuments.filter((document) => {
+      const passQuery =
+        !normalizedQuery ||
+        document.title.includes(normalizedQuery) ||
+        (document.patient?.fullName || "").includes(normalizedQuery) ||
+        (document.tags || "").includes(normalizedQuery);
+      const passFilter =
         filter === "all" ||
-        (filter === "form" && d.documentType.includes("טופס")) ||
-        (filter === "report" && d.documentType.includes("דוח")) ||
-        (filter === "plan" && d.documentType.includes("תכנית"));
-      return passQ && passF;
+        (filter === "form" && document.documentType.includes("טופס")) ||
+        (filter === "report" && document.documentType.includes("דוח")) ||
+        (filter === "plan" && document.documentType.includes("תכנית"));
+      return passQuery && passFilter;
     });
   }, [query, filter]);
 
   const artwork = useMemo(() => {
-    const q = query.trim();
+    const normalizedQuery = query.trim();
     return mockImages.filter(
-      (img) =>
-        !q ||
-        img.title.includes(q) ||
-        (img.patient?.fullName || "").includes(q)
+      (image) => !normalizedQuery || image.title.includes(normalizedQuery) || (image.patient?.fullName || "").includes(normalizedQuery)
     );
   }, [query]);
 
@@ -57,16 +55,28 @@ export function DocumentsPage() {
       <PageHeader
         eyebrow="ארכיון"
         title="מסמכים ויצירות"
-        subtitle="כל המסמכים, התמונות והיצירות של המטופלים במקום אחד — מסודרים וקלים למצוא."
+        subtitle="כל המסמכים, התמונות והיצירות של המטופלים במקום אחד — מסודרים וקלים למציאה."
         actions={
           <>
             <Button
               variant="secondary"
               iconStart={<Icon name="download" size={16} />}
+              onClick={() =>
+                downloadJson("batel-documents-export.json", {
+                  exportedAt: new Date().toISOString(),
+                  documents,
+                  artwork
+                })
+              }
             >
               ייצוא
             </Button>
-            <Button iconStart={<Icon name="upload" size={16} />}>
+            <Button
+              iconStart={<Icon name="upload" size={16} />}
+              onClick={() =>
+                showPlaceholderMessage("העלאה גלובלית דורשת בחירת מטופל. כרגע אפשר להעלות מסמך או תמונה מתוך כרטיס המטופל.")
+              }
+            >
               העלאת מסמך
             </Button>
           </>
@@ -75,19 +85,12 @@ export function DocumentsPage() {
 
       <Card>
         <CardBody compact>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              flexWrap: "wrap"
-            }}
-          >
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 240 }}>
               <SearchInput
-                placeholder="חיפוש לפי שם מסמך, מטופל, תגיות..."
+                placeholder="חיפוש לפי שם מסמך, מטופל או תגיות..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
               />
             </div>
             <Segmented<View>
@@ -121,30 +124,30 @@ export function DocumentsPage() {
               <EmptyState
                 icon="fileText"
                 title="לא נמצאו מסמכים"
-                description="אפשר להעלות הסכמות, דוחות חיצוניים, תכניות טיפול וכו'."
+                description="אפשר להעלות הסכמות, דוחות חיצוניים, תכניות טיפול ועוד."
               />
             </CardBody>
           </Card>
         ) : (
           <div className="ds-grid ds-grid--auto">
-            {documents.map((d) => (
-              <Card key={d.id} style={{ cursor: "pointer" }}>
+            {documents.map((document) => (
+              <Card
+                key={document.id}
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  showPlaceholderMessage(
+                    `פתיחת מסמך מלא מתוך המרכז הגלובלי תתווסף בהמשך. כרגע אפשר לנהל אותו מתוך כרטיס המטופל ${document.patient?.fullName || ""}.`
+                  )
+                }
+              >
                 <CardBody compact>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 12,
-                      alignItems: "flex-start",
-                      marginBottom: 10
-                    }}
-                  >
+                  <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
                     <div
                       style={{
                         width: 44,
                         height: 56,
                         borderRadius: "var(--radius-sm)",
-                        background:
-                          "linear-gradient(160deg, var(--sage-50), var(--clay-50))",
+                        background: "linear-gradient(160deg, var(--sage-50), var(--clay-50))",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -155,25 +158,12 @@ export function DocumentsPage() {
                       <Icon name="fileText" size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <strong
-                        style={{
-                          fontSize: "var(--text-base)",
-                          display: "block",
-                          lineHeight: 1.35
-                        }}
-                      >
-                        {d.title}
-                      </strong>
-                      <div
-                        className="ds-t-xs ds-t-muted"
-                        style={{ marginTop: 2 }}
-                      >
-                        {d.authorName || "—"}
+                      <strong style={{ fontSize: "var(--text-base)", display: "block", lineHeight: 1.35 }}>{document.title}</strong>
+                      <div className="ds-t-xs ds-t-muted" style={{ marginTop: 2 }}>
+                        {document.authorName || "—"}
                       </div>
                     </div>
-                    <Badge tone={docTypeTone(d.documentType)}>
-                      {d.documentType}
-                    </Badge>
+                    <Badge tone={docTypeTone(document.documentType)}>{document.documentType}</Badge>
                   </div>
                   <div
                     style={{
@@ -185,12 +175,10 @@ export function DocumentsPage() {
                       borderTop: "1px dashed var(--border-soft)"
                     }}
                   >
-                    <Avatar name={d.patient?.fullName} size="sm" />
-                    <span className="ds-t-sm ds-t-muted">
-                      {d.patient?.fullName}
-                    </span>
+                    <Avatar name={document.patient?.fullName} size="sm" />
+                    <span className="ds-t-sm ds-t-muted">{document.patient?.fullName}</span>
                     <span className="ds-t-xs ds-t-faint" style={{ marginInlineStart: "auto" }}>
-                      {new Date(d.uploadedAt).toLocaleDateString("he-IL")}
+                      {new Date(document.uploadedAt).toLocaleDateString("he-IL")}
                     </span>
                   </div>
                 </CardBody>
@@ -204,19 +192,26 @@ export function DocumentsPage() {
             <EmptyState
               icon="image"
               title="אין יצירות בארכיון"
-              description="ניתן להעלות תמונות של עבודות אומנות מהמפגשים — עם תיוג אוטומטי לתהליך."
+              description="ניתן להעלות תמונות של עבודות אמנות מהמפגשים עם תיוג אוטומטי לתהליך."
             />
           </CardBody>
         </Card>
       ) : (
         <div className="ds-grid ds-grid--4">
-          {artwork.map((img) => (
-            <Card key={img.id} style={{ cursor: "pointer" }}>
+          {artwork.map((image) => (
+            <Card
+              key={image.id}
+              style={{ cursor: "pointer" }}
+              onClick={() =>
+                showPlaceholderMessage(
+                  `תצוגת יצירה מלאה תתווסף בהמשך. כרגע אפשר לנהל אותה מתוך כרטיס המטופל ${image.patient?.fullName || ""}.`
+                )
+              }
+            >
               <div
                 style={{
                   aspectRatio: "4 / 3",
-                  background:
-                    "linear-gradient(135deg, var(--sage-100), var(--clay-100), var(--lavender-100))",
+                  background: "linear-gradient(135deg, var(--sage-100), var(--clay-100), var(--lavender-100))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -226,14 +221,10 @@ export function DocumentsPage() {
                 <Icon name="image" size={32} />
               </div>
               <CardBody compact>
-                <strong style={{ fontSize: "var(--text-sm)", display: "block" }}>
-                  {img.title}
-                </strong>
+                <strong style={{ fontSize: "var(--text-sm)", display: "block" }}>{image.title}</strong>
                 <p className="ds-t-xs ds-t-muted" style={{ marginTop: 2 }}>
-                  {img.patient?.fullName} ·{" "}
-                  {img.capturedAt
-                    ? new Date(img.capturedAt).toLocaleDateString("he-IL")
-                    : ""}
+                  {image.patient?.fullName} ·{" "}
+                  {image.capturedAt ? new Date(image.capturedAt).toLocaleDateString("he-IL") : ""}
                 </p>
               </CardBody>
             </Card>

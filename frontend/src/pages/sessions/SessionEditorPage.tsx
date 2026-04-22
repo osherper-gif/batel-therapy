@@ -9,7 +9,13 @@ import { Icon } from "../../design-system/Icon";
 import { Field, TextInput, TextArea, SelectInput } from "../../design-system/Field";
 import { Callout } from "../../design-system/Callout";
 import { Skeleton } from "../../design-system/Skeleton";
-import { getSession } from "../../services/sessionsService";
+import { showPlaceholderMessage } from "../../lib/uiActions";
+import {
+  createSession,
+  getSession,
+  updateSession,
+  type SessionMutationInput
+} from "../../services/sessionsService";
 import { listPatients } from "../../services/patientsService";
 import { mockImages } from "../../mocks";
 import type { Session, Patient } from "../../types";
@@ -113,19 +119,42 @@ export function SessionEditorPage() {
     setDraft((d) => ({ ...d, [key]: value }));
   };
 
-  const handleSave = () => {
-    setSaving(true);
+  async function handleSave() {
+    try {
+      setSaving(true);
     // Simulated save — in a real app this would call sessionsService.save()
-    setTimeout(() => {
-      setSaving(false);
+      const payload: SessionMutationInput = {
+        patientId: draft.patientId,
+        date: draft.date,
+        startTime: draft.startTime,
+        durationMinutes: draft.durationMinutes,
+        sessionType: draft.sessionType,
+        frameworkType: draft.frameworkType || "",
+        location: draft.location || "",
+        attendees: draft.attendees || "",
+        goal: draft.goal || "",
+        sessionDescription: draft.sessionDescription || "",
+        materialsUsed: draft.materialsUsed || "",
+        behaviorNotes: draft.behaviorNotes || "",
+        clinicalImpression: draft.clinicalImpression || "",
+        followUpNotes: draft.followUpNotes || ""
+      };
+      const saved = isNew || !params.id ? await createSession(payload) : await updateSession(params.id, payload);
+      setDraft(saved);
+      setSession(saved);
+
       if (isNew) {
         navigate("/sessions");
-      } else {
-        setSession(draft);
-        setMode("view");
+        return;
       }
-    }, 600);
-  };
+
+      setMode("view");
+    } catch (error) {
+      showPlaceholderMessage(error instanceof Error ? error.message : "לא הצלחנו לשמור את המפגש.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const handleCancel = () => {
     if (isNew) {
@@ -189,16 +218,18 @@ export function SessionEditorPage() {
                 iconStart={<Icon name="save" size={16} />}
                 onClick={handleSave}
                 loading={isSaving}
+                data-testid="session-save"
               >
                 שמירה
               </Button>
             </>
           ) : (
             <>
-              <Button
-                variant="secondary"
-                iconStart={<Icon name="printer" size={16} />}
-              >
+                <Button
+                  variant="secondary"
+                  iconStart={<Icon name="printer" size={16} />}
+                  onClick={() => showPlaceholderMessage("הדפסת מפגש עדיין לא מומשה.")}
+                >
                 הדפסה
               </Button>
               <Button
@@ -225,6 +256,7 @@ export function SessionEditorPage() {
                 <Field label="מטופל/ת" required>
                   {editing ? (
                     <SelectInput
+                      data-testid="session-patient-select"
                       value={draft.patientId}
                       onChange={(e) => {
                         const id = e.target.value;
@@ -388,6 +420,7 @@ export function SessionEditorPage() {
                 >
                   {editing ? (
                     <TextArea
+                      data-testid="session-goal"
                       rows={2}
                       value={draft.goal || ""}
                       onChange={(e) => update("goal", e.target.value)}
@@ -404,6 +437,7 @@ export function SessionEditorPage() {
                 >
                   {editing ? (
                     <TextArea
+                      data-testid="session-description"
                       rows={6}
                       value={draft.sessionDescription || ""}
                       onChange={(e) =>
@@ -630,6 +664,7 @@ export function SessionEditorPage() {
                     variant="ghost"
                     iconStart={<Icon name="upload" size={14} />}
                     block
+                    onClick={() => showPlaceholderMessage("העלאת תמונה מתוך המפגש עדיין לא מומשה.")}
                   >
                     העלאת תמונה מהמפגש
                   </Button>
@@ -637,6 +672,7 @@ export function SessionEditorPage() {
                     variant="ghost"
                     iconStart={<Icon name="fileText" size={14} />}
                     block
+                    onClick={() => showPlaceholderMessage("צירוף מסמך מתוך המפגש עדיין לא מומש.")}
                   >
                     צירוף מסמך
                   </Button>
@@ -644,6 +680,7 @@ export function SessionEditorPage() {
                     variant="ghost"
                     iconStart={<Icon name="sparkles" size={14} />}
                     block
+                    onClick={() => showPlaceholderMessage("סיכום AI למפגש עדיין לא מומש.")}
                   >
                     סיכום AI של המפגש
                   </Button>
@@ -651,6 +688,7 @@ export function SessionEditorPage() {
                     variant="ghost"
                     iconStart={<Icon name="trash" size={14} />}
                     block
+                    onClick={() => showPlaceholderMessage("מחיקת מפגש עדיין לא מומשה.")}
                   >
                     מחיקת מפגש
                   </Button>

@@ -2,6 +2,8 @@ export interface User {
   id: string;
   username: string;
   role: string;
+  email?: string | null;
+  authProvider?: string | null;
 }
 
 export interface Patient {
@@ -114,4 +116,82 @@ export interface DashboardPayload {
   };
   recentSessions: Session[];
   recentPatients: Patient[];
+}
+
+export type PublicSiteItemType =
+  | "landing"
+  | "content_page"
+  | "contact_page"
+  | "form_page"
+  | "external_html"
+  | "resource_page";
+
+export type PublicSiteItemStatus = "draft" | "published" | "archived";
+
+export interface PublicSiteItem {
+  id: string;
+  title: string;
+  slug: string;
+  pageType: PublicSiteItemType;
+  status: PublicSiteItemStatus;
+  summary: string;
+  contentJson: Record<string, unknown> | null;
+  htmlContent: string | null;
+  externalPath: string | null;
+  externalUrl: string | null;
+  servedPath?: string | null;
+  servedUrl?: string | null;
+  sourceType?: "single_html_file" | "html_directory" | "remote_url" | null;
+  serveMode?: "backend_route" | "direct_url" | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  publishedAt: string | null;
+  updatedAt: string;
+  featured?: boolean;
+}
+
+export type PublicFormKind = "contact" | "consultation" | "parent_inquiry" | "school_inquiry";
+
+export interface PublicFormDefinition {
+  id: string;
+  title: string;
+  slug: string;
+  formType: PublicFormKind;
+  status: PublicSiteItemStatus;
+  summary: string;
+  linkedPageId: string | null;
+  destinationLabel: string;
+  destinationEmail: string;
+  successMessage: string;
+  updatedAt: string;
+}
+
+export interface PublicNavEntry {
+  id: string;
+  label: string;
+  targetType: "page" | "external" | "form";
+  targetId: string;
+  isPrimary: boolean;
+}
+
+export interface MainWebsiteSettings {
+  siteTitle: string;
+  siteUrl: string;
+  tagline: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  primaryCtaLabel: string;
+  primaryCtaTargetId: string | null;
+  secondaryCtaLabel: string;
+  secondaryCtaTargetId: string | null;
+  contactPageId: string | null;
+  featuredPageIds: string[];
+  navigation: PublicNavEntry[];
+  updatedAt: string;
+}
+
+export interface PublicSiteManagerState {
+  mainWebsite: MainWebsiteSettings;
+  items: PublicSiteItem[];
+  forms: PublicFormDefinition[];
 }

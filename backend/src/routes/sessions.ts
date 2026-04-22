@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import { asyncHandler } from "../utils/async-handler.js";
 import { sessionSchema } from "../validation/session.js";
 
 export const sessionsRouter = Router();
 
-sessionsRouter.get("/", async (_request, response) => {
+sessionsRouter.get("/", asyncHandler(async (_request, response) => {
   const sessions = await prisma.session.findMany({
     orderBy: { date: "desc" },
     include: {
@@ -18,9 +19,9 @@ sessionsRouter.get("/", async (_request, response) => {
   });
 
   return response.json({ sessions });
-});
+}));
 
-sessionsRouter.post("/", async (request, response) => {
+sessionsRouter.post("/", asyncHandler(async (request, response) => {
   const payload = sessionSchema.parse(request.body);
 
   const session = await prisma.session.create({
@@ -40,13 +41,14 @@ sessionsRouter.post("/", async (request, response) => {
   });
 
   return response.status(201).json({ session });
-});
+}));
 
-sessionsRouter.put("/:id", async (request, response) => {
+sessionsRouter.put("/:id", asyncHandler(async (request, response) => {
+  const sessionId = String(request.params.id);
   const payload = sessionSchema.parse(request.body);
 
   const session = await prisma.session.update({
-    where: { id: request.params.id },
+    where: { id: sessionId },
     data: {
       ...payload,
       date: new Date(payload.date),
@@ -63,12 +65,13 @@ sessionsRouter.put("/:id", async (request, response) => {
   });
 
   return response.json({ session });
-});
+}));
 
-sessionsRouter.delete("/:id", async (request, response) => {
+sessionsRouter.delete("/:id", asyncHandler(async (request, response) => {
+  const sessionId = String(request.params.id);
   await prisma.session.delete({
-    where: { id: request.params.id }
+    where: { id: sessionId }
   });
 
   return response.status(204).send();
-});
+}));

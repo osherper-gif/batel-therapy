@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../design-system/PageHeader";
-import { Card, CardBody, CardHeader } from "../../design-system/Card";
+import { Card, CardBody } from "../../design-system/Card";
 import { Button } from "../../design-system/Button";
 import { SearchInput } from "../../design-system/SearchInput";
 import { Segmented } from "../../design-system/Tabs";
@@ -10,13 +10,13 @@ import { Avatar } from "../../design-system/Avatar";
 import { Icon } from "../../design-system/Icon";
 import { StatCard } from "../../design-system/StatCard";
 import { EmptyState } from "../../design-system/EmptyState";
-import { mockReports } from "../../mocks";
-import type { TherapyReport } from "../../mocks";
+import { mockReports, type TherapyReport } from "../../mocks";
+import { showPlaceholderMessage } from "../../lib/uiActions";
 
 type StatusFilter = "all" | "draft" | "pending_review" | "approved" | "sent";
 
-const statusTone = (s: string) => {
-  switch (s) {
+const statusTone = (status: string) => {
+  switch (status) {
     case "draft":
       return "muted" as const;
     case "pending_review":
@@ -29,22 +29,23 @@ const statusTone = (s: string) => {
       return "muted" as const;
   }
 };
-const statusLabel = (s: string) =>
+
+const statusLabel = (status: string) =>
   ({
     draft: "טיוטה",
     pending_review: "ממתין לאישור",
     approved: "מאושר",
     sent: "נשלח"
-  })[s] || s;
+  })[status] || status;
 
-const typeLabel = (t: string) =>
+const typeLabel = (type: string) =>
   ({
     quarterly: "רבעוני",
     annual: "שנתי",
     intake_summary: "סיכום אינטייק",
     progress: "התקדמות",
     external_referral: "הפניה חיצונית"
-  })[t] || t;
+  })[type] || type;
 
 export function ReportsPage() {
   const navigate = useNavigate();
@@ -52,23 +53,23 @@ export function ReportsPage() {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    const q = query.trim();
-    return mockReports.filter((r) => {
-      const passQ =
-        !q ||
-        r.title.includes(q) ||
-        r.patientName.includes(q) ||
-        (r.recipient || "").includes(q);
-      const passF = filter === "all" || r.status === filter;
-      return passQ && passF;
+    const normalizedQuery = query.trim();
+    return mockReports.filter((report) => {
+      const passQuery =
+        !normalizedQuery ||
+        report.title.includes(normalizedQuery) ||
+        report.patientName.includes(normalizedQuery) ||
+        (report.recipient || "").includes(normalizedQuery);
+      const passFilter = filter === "all" || report.status === filter;
+      return passQuery && passFilter;
     });
   }, [query, filter]);
 
   const stats = {
     total: mockReports.length,
-    draft: mockReports.filter((r) => r.status === "draft").length,
-    pending: mockReports.filter((r) => r.status === "pending_review").length,
-    sent: mockReports.filter((r) => r.status === "sent").length
+    draft: mockReports.filter((report) => report.status === "draft").length,
+    pending: mockReports.filter((report) => report.status === "pending_review").length,
+    sent: mockReports.filter((report) => report.status === "sent").length
   };
 
   return (
@@ -76,19 +77,19 @@ export function ReportsPage() {
       <PageHeader
         eyebrow="ארכיון"
         title="דוחות"
-        subtitle="דוחות רבעוניים, סיכומי תהליך, הפניות — עם מעקב סטטוס ברור."
+        subtitle="דוחות רבעוניים, סיכומי תהליך והפניות — עם מעקב סטטוס ברור."
         actions={
           <>
             <Button
               variant="secondary"
               iconStart={<Icon name="sparkles" size={16} />}
+              onClick={() =>
+                showPlaceholderMessage("טיוטה אוטומטית לדוחות עדיין לא פעילה. כרגע אפשר לפתוח דוח חדש ולעבור דרך עורך הדוחות.")
+              }
             >
               טיוטה אוטומטית
             </Button>
-            <Button
-              iconStart={<Icon name="plus" size={16} />}
-              onClick={() => navigate("/reports/new")}
-            >
+            <Button iconStart={<Icon name="plus" size={16} />} onClick={() => navigate("/reports/new")}>
               דוח חדש
             </Button>
           </>
@@ -97,36 +98,19 @@ export function ReportsPage() {
 
       <div className="ds-grid ds-grid--4">
         <StatCard label="סה״כ דוחות" value={stats.total} icon="fileText" />
-        <StatCard
-          label="טיוטות"
-          value={stats.draft}
-          icon="edit"
-          tone="lavender"
-        />
-        <StatCard
-          label="ממתינים לאישור"
-          value={stats.pending}
-          icon="clock"
-          tone="clay"
-        />
+        <StatCard label="טיוטות" value={stats.draft} icon="edit" tone="lavender" />
+        <StatCard label="ממתינים לאישור" value={stats.pending} icon="clock" tone="clay" />
         <StatCard label="נשלחו" value={stats.sent} icon="send" tone="info" />
       </div>
 
       <Card>
         <CardBody compact>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              flexWrap: "wrap"
-            }}
-          >
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ flex: 1, minWidth: 240 }}>
               <SearchInput
                 placeholder="חיפוש לפי כותרת דוח, מטופל או נמען"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
               />
             </div>
             <Segmented<StatusFilter>
@@ -150,14 +134,14 @@ export function ReportsPage() {
             <EmptyState
               icon="fileText"
               title="לא נמצאו דוחות"
-              description="אפשר להתחיל מטיוטה אוטומטית או ליצור דוח חדש."
+              description="אפשר להתחיל מדוח חדש או מפתיחת טיוטה קיימת."
             />
           </CardBody>
         </Card>
       ) : (
         <div className="ds-col ds-col--sm">
-          {filtered.map((r) => (
-            <ReportRow key={r.id} report={r} onOpen={() => navigate(`/reports/${r.id}`)} />
+          {filtered.map((report) => (
+            <ReportRow key={report.id} report={report} onOpen={() => navigate(`/reports/${report.id}`)} />
           ))}
         </div>
       )}
@@ -175,13 +159,7 @@ function ReportRow({
   return (
     <Card style={{ cursor: "pointer" }} onClick={onOpen}>
       <CardBody compact>
-        <div
-          style={{
-            display: "flex",
-            gap: 14,
-            alignItems: "flex-start"
-          }}
-        >
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
           <div
             style={{
               width: 40,
@@ -198,27 +176,12 @@ function ReportRow({
             <Icon name="fileText" size={18} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-                flexWrap: "wrap",
-                marginBottom: 4
-              }}
-            >
-              <strong style={{ fontSize: "var(--text-base)" }}>
-                {report.title}
-              </strong>
-              <Badge tone={statusTone(report.status)}>
-                {statusLabel(report.status)}
-              </Badge>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 4 }}>
+              <strong style={{ fontSize: "var(--text-base)" }}>{report.title}</strong>
+              <Badge tone={statusTone(report.status)}>{statusLabel(report.status)}</Badge>
               <Badge tone="outline">{typeLabel(report.type)}</Badge>
             </div>
-            <p
-              className="ds-t-sm ds-t-muted"
-              style={{ lineHeight: 1.55, marginBottom: 6 }}
-            >
+            <p className="ds-t-sm ds-t-muted" style={{ lineHeight: 1.55, marginBottom: 6 }}>
               {report.summary}
             </p>
             <div
@@ -231,9 +194,7 @@ function ReportRow({
                 flexWrap: "wrap"
               }}
             >
-              <span
-                style={{ display: "inline-flex", gap: 6, alignItems: "center" }}
-              >
+              <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
                 <Avatar name={report.patientName} size="sm" />
                 {report.patientName}
               </span>
@@ -251,6 +212,10 @@ function ReportRow({
             variant="ghost"
             size="sm"
             iconEnd={<Icon name="chevronLeft" size={14} />}
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen();
+            }}
           >
             פתיחה
           </Button>

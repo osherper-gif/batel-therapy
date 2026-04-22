@@ -12,6 +12,7 @@ import { SkeletonRows } from "../../design-system/Skeleton";
 import { Progress } from "../../design-system/Progress";
 import { getDashboard } from "../../services/dashboardService";
 import { mockTasks, mockInsights, mockAISummary } from "../../mocks";
+import { showPlaceholderMessage } from "../../lib/uiActions";
 import type { DashboardPayload } from "../../types";
 
 export function DashboardPage() {
@@ -21,19 +22,24 @@ export function DashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let alive = true;
+    let active = true;
     setLoading(true);
     getDashboard()
-      .then((d) => {
-        if (alive) {
-          setData(d);
-          setError(null);
-        }
+      .then((payload) => {
+        if (!active) return;
+        setData(payload);
+        setError(null);
       })
-      .catch((e) => alive && setError(e.message))
-      .finally(() => alive && setLoading(false));
+      .catch((nextError) => {
+        if (!active) return;
+        setError(nextError instanceof Error ? nextError.message : "לא הצלחנו לטעון את הדשבורד.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
     return () => {
-      alive = false;
+      active = false;
     };
   }, []);
 
@@ -43,25 +49,23 @@ export function DashboardPage() {
     month: "long"
   });
 
-  const urgentTasks = mockTasks.filter((t) => t.status !== "done" && t.priority === "high");
+  const urgentTasks = mockTasks.filter((task) => task.status !== "done" && task.priority === "high");
 
   return (
     <div className="ds-page">
       <PageHeader
         eyebrow="סקירה יומית"
-        title="שלום, בטאל ☀"
-        subtitle={`היום — ${today}. ${data ? `${data.recentSessions.length} מפגשים השבוע.` : ""}`}
+        title="שלום, בת-אל"
+        subtitle={`היום ${today}. ${data ? `${data.recentSessions.length} מפגשים השבוע.` : ""}`}
         actions={
           <>
-            <Button
-              variant="secondary"
-              iconStart={<Icon name="calendar" size={16} />}
-            >
+            <Button variant="secondary" iconStart={<Icon name="calendar" size={16} />} onClick={() => navigate("/sessions")}>
               יומן השבוע
             </Button>
             <Button
               iconStart={<Icon name="plus" size={16} />}
-              onClick={() => navigate("/sessions?new=1")}
+              onClick={() => navigate("/sessions/new")}
+              data-testid="dashboard-new-session"
             >
               מפגש חדש
             </Button>
@@ -69,7 +73,11 @@ export function DashboardPage() {
         }
       />
 
-      {error ? <Callout tone="warning" title="מקור מידע לא זמין">{error}. מציגים נתוני דוגמה.</Callout> : null}
+      {error ? (
+        <Callout tone="warning" title="מקור מידע לא זמין">
+          {error}. מציגים נתוני דוגמה.
+        </Callout>
+      ) : null}
 
       <section className="ds-grid ds-grid--4">
         <StatCard
@@ -77,6 +85,7 @@ export function DashboardPage() {
           value={isLoading ? "—" : data!.stats.patientsCount}
           icon="users"
           tone="sage"
+          data-testid="dashboard-stat-patients"
           delta={{ value: "+2 החודש", direction: "up" }}
         />
         <StatCard
@@ -84,6 +93,7 @@ export function DashboardPage() {
           value={isLoading ? "—" : data!.stats.sessionsCount}
           icon="calendar"
           tone="clay"
+          data-testid="dashboard-stat-sessions"
           delta={{ value: "-1 מהשבוע שעבר", direction: "down" }}
         />
         <StatCard
@@ -91,6 +101,7 @@ export function DashboardPage() {
           value={isLoading ? "—" : data!.stats.documentsCount}
           icon="folder"
           tone="info"
+          data-testid="dashboard-stat-documents"
           hint="כולל מסמכי רקע ודוחות"
         />
         <StatCard
@@ -98,6 +109,7 @@ export function DashboardPage() {
           value={isLoading ? "—" : data!.stats.imagesCount}
           icon="image"
           tone="lavender"
+          data-testid="dashboard-stat-images"
           hint="תמונות מהמפגשים"
         />
       </section>
@@ -110,19 +122,13 @@ export function DashboardPage() {
         }}
         className="dashboard-grid"
       >
-        {/* Left — recent sessions + recent patients */}
         <div className="ds-col">
           <Card>
             <CardHeader
               title="מפגשים אחרונים"
               subtitle="חמשת המפגשים האחרונים שתיעדת."
               actions={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconEnd={<Icon name="chevronLeft" size={14} />}
-                  onClick={() => navigate("/sessions")}
-                >
+                <Button variant="ghost" size="sm" iconEnd={<Icon name="chevronLeft" size={14} />} onClick={() => navigate("/sessions")}>
                   לכל המפגשים
                 </Button>
               }
@@ -132,24 +138,18 @@ export function DashboardPage() {
                 <SkeletonRows count={4} height={56} />
               ) : (
                 <div className="ds-col ds-col--sm">
-                  {data!.recentSessions.map((s) => (
+                  {data!.recentSessions.map((session) => (
                     <div
-                      key={s.id}
+                      key={session.id}
                       className="ds-list-row"
                       style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/sessions/${s.id}`)}
+                      onClick={() => navigate(`/sessions/${session.id}`)}
                     >
-                      <Avatar name={s.patient?.fullName} />
+                      <Avatar name={session.patient?.fullName} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            alignItems: "center"
-                          }}
-                        >
-                          <strong>{s.patient?.fullName || "—"}</strong>
-                          <Badge tone="sage">{s.sessionType}</Badge>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                          <strong>{session.patient?.fullName || "—"}</strong>
+                          <Badge tone="sage">{session.sessionType}</Badge>
                         </div>
                         <p
                           className="ds-t-sm ds-t-muted"
@@ -160,16 +160,16 @@ export function DashboardPage() {
                             whiteSpace: "nowrap"
                           }}
                         >
-                          {s.goal || "—"}
+                          {session.goal || "—"}
                         </p>
                       </div>
                       <div style={{ textAlign: "start", fontSize: "var(--text-xs)", color: "var(--text-muted)" }}>
-                        {new Date(s.date).toLocaleDateString("he-IL", {
+                        {new Date(session.date).toLocaleDateString("he-IL", {
                           weekday: "short",
                           day: "numeric",
                           month: "short"
                         })}
-                        <div>{s.startTime}</div>
+                        <div>{session.startTime}</div>
                       </div>
                     </div>
                   ))}
@@ -182,12 +182,7 @@ export function DashboardPage() {
             <CardHeader
               title="מטופלים שעודכנו לאחרונה"
               actions={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconEnd={<Icon name="chevronLeft" size={14} />}
-                  onClick={() => navigate("/patients")}
-                >
+                <Button variant="ghost" size="sm" iconEnd={<Icon name="chevronLeft" size={14} />} onClick={() => navigate("/patients")}>
                   לכל המטופלים
                 </Button>
               }
@@ -197,23 +192,21 @@ export function DashboardPage() {
                 <SkeletonRows count={3} height={48} />
               ) : (
                 <div className="ds-col ds-col--sm">
-                  {data!.recentPatients.map((p) => (
+                  {data!.recentPatients.map((patient) => (
                     <div
-                      key={p.id}
+                      key={patient.id}
                       className="ds-list-row"
                       style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/patients/${p.id}`)}
+                      onClick={() => navigate(`/patients/${patient.id}`)}
                     >
-                      <Avatar name={p.fullName} />
+                      <Avatar name={patient.fullName} />
                       <div style={{ flex: 1 }}>
-                        <strong>{p.fullName}</strong>
+                        <strong>{patient.fullName}</strong>
                         <p className="ds-t-sm ds-t-muted">
-                          {p.treatmentFramework} · גיל {p.age}
+                          {patient.treatmentFramework} · גיל {patient.age}
                         </p>
                       </div>
-                      <Badge tone={p.status === "active" ? "success" : "muted"}>
-                        {statusLabel(p.status)}
-                      </Badge>
+                      <Badge tone={patient.status === "active" ? "success" : "muted"}>{statusLabel(patient.status)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -222,14 +215,13 @@ export function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right — insights, tasks */}
         <div className="ds-col">
           <Card>
             <CardHeader
               title="תובנות השבוע"
               eyebrow="BATEL AI"
               actions={
-                <IconButton aria-label="עוד">
+                <IconButton aria-label="פתיחת מרכז התובנות" onClick={() => navigate("/ai")}>
                   <Icon name="more" size={16} />
                 </IconButton>
               }
@@ -242,17 +234,14 @@ export function DashboardPage() {
                 <div style={{ fontSize: "var(--text-sm)", color: "var(--text)" }}>
                   <strong>מגמות השבוע</strong>
                   <ul style={{ paddingInlineStart: 18, marginTop: 8 }}>
-                    {mockAISummary.weekly.notableTrends.map((t) => (
-                      <li key={t} style={{ marginBottom: 4 }}>
-                        {t}
+                    {mockAISummary.weekly.notableTrends.map((trend) => (
+                      <li key={trend} style={{ marginBottom: 4 }}>
+                        {trend}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <Progress
-                  value={72}
-                  label="התקדמות מטופלים פעילים (ממוצע)"
-                />
+                <Progress value={72} label="התקדמות מטופלים פעילים (ממוצע)" />
               </div>
             </CardBody>
           </Card>
@@ -262,12 +251,7 @@ export function DashboardPage() {
               title="משימות דחופות"
               subtitle={`${urgentTasks.length} פריטים לטיפול`}
               actions={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconEnd={<Icon name="chevronLeft" size={14} />}
-                  onClick={() => navigate("/tasks")}
-                >
+                <Button variant="ghost" size="sm" iconEnd={<Icon name="chevronLeft" size={14} />} onClick={() => navigate("/tasks")}>
                   לכולם
                 </Button>
               }
@@ -277,14 +261,13 @@ export function DashboardPage() {
                 <p className="ds-t-muted ds-t-sm">אין משימות דחופות כרגע.</p>
               ) : (
                 <div className="ds-col ds-col--sm">
-                  {urgentTasks.map((t) => (
-                    <div key={t.id} className="ds-list-row">
+                  {urgentTasks.map((task) => (
+                    <div key={task.id} className="ds-list-row">
                       <Icon name="flag" size={18} />
                       <div style={{ flex: 1 }}>
-                        <strong style={{ fontSize: "var(--text-sm)" }}>{t.title}</strong>
+                        <strong style={{ fontSize: "var(--text-sm)" }}>{task.title}</strong>
                         <p className="ds-t-xs ds-t-muted">
-                          {t.patientName || "כללי"} · עד{" "}
-                          {new Date(t.dueDate).toLocaleDateString("he-IL")}
+                          {task.patientName || "כללי"} · עד {new Date(task.dueDate).toLocaleDateString("he-IL")}
                         </p>
                       </div>
                       <Badge tone="danger" dot>
@@ -302,20 +285,24 @@ export function DashboardPage() {
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                 <Icon name="sparkles" size={18} />
                 <div>
-                  <strong style={{ fontSize: "var(--text-sm)" }}>
-                    {mockInsights[0].title}
-                  </strong>
+                  <strong style={{ fontSize: "var(--text-sm)" }}>{mockInsights[0].title}</strong>
                   <p className="ds-t-sm" style={{ marginTop: 4 }}>
                     {mockInsights[0].body}
                   </p>
-                  <Button
-                    size="sm"
-                    variant="subtle"
-                    style={{ marginTop: 10 }}
-                    onClick={() => navigate("/ai")}
-                  >
-                    לעוד תובנות
-                  </Button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                    <Button size="sm" variant="subtle" onClick={() => navigate("/ai")}>
+                      לעוד תובנות
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        showPlaceholderMessage("סימון תובנה מתוך הדשבורד יתווסף בהמשך. כרגע אפשר לפתוח את מרכז ה-AI ולנהל משם.")
+                      }
+                    >
+                      טיפול מאוחר יותר
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardBody>
@@ -333,14 +320,8 @@ export function DashboardPage() {
 }
 
 function statusLabel(status: string) {
-  switch (status) {
-    case "active":
-      return "פעיל";
-    case "onboarding":
-      return "בהצטרפות";
-    case "on_hold":
-      return "מוקפא";
-    default:
-      return status;
-  }
+  if (status === "active") return "פעיל";
+  if (status === "onboarding") return "בהצטרפות";
+  if (status === "on_hold") return "מוקפא";
+  return status;
 }

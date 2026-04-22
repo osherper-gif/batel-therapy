@@ -1,6 +1,12 @@
-const isLocalDev = window.location.hostname === "localhost";
-const API_URL = isLocalDev ? "http://localhost:4000/api" : "/api";
-const APP_URL = isLocalDev ? "http://localhost:4000" : "";
+const isLocalFrontendHost =
+  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const FALLBACK_API_ORIGIN = isLocalFrontendHost ? "http://localhost:4000" : window.location.origin;
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const API_ORIGIN = configuredApiUrl
+  ? configuredApiUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
+  : FALLBACK_API_ORIGIN;
+const API_URL = `${API_ORIGIN}/api`;
+const APP_URL = API_ORIGIN;
 const TOKEN_KEY = "batel-admin-token";
 
 interface ApiFetchOptions extends RequestInit {
@@ -70,4 +76,8 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
 export function getFileUrl(filePath: string) {
   const token = getToken();
   return `${APP_URL}/${filePath.replace(/^\/+/, "")}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+}
+
+export function getBackendOrigin() {
+  return API_ORIGIN;
 }

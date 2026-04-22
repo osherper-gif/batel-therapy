@@ -6,7 +6,7 @@ async function startServer() {
   await ensureAdminUser();
 
   app.listen(env.PORT, () => {
-    console.log(`Backend listening on http://localhost:${env.PORT}`);
+    console.log(`Backend listening on port ${env.PORT}`);
   });
 }
 

@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { HTMLAttributes, ReactNode } from "react";
 import { Icon, IconName } from "./Icon";
 
 type Tone = "sage" | "clay" | "lavender" | "info";
 
-interface Props {
+interface Props extends HTMLAttributes<HTMLDivElement> {
   label: ReactNode;
   value: ReactNode;
   icon?: IconName;
@@ -13,13 +13,13 @@ interface Props {
   onClick?: () => void;
 }
 
-export function StatCard({ label, value, icon, tone = "sage", delta, hint, onClick }: Props) {
+export function StatCard({ label, value, icon, tone = "sage", delta, hint, onClick, className, style, ...rest }: Props) {
   const toneClass = tone !== "sage" ? `ds-stat--${tone}` : "";
   const clickable = onClick
-    ? { role: "button", tabIndex: 0, onClick, style: { cursor: "pointer" } }
+    ? { role: "button", tabIndex: 0, onClick, style: { ...(style ?? {}), cursor: "pointer" } }
     : {};
   return (
-    <div className={["ds-stat", toneClass].filter(Boolean).join(" ")} {...clickable}>
+    <div className={["ds-stat", toneClass, className ?? ""].filter(Boolean).join(" ")} style={style} {...rest} {...clickable}>
       {icon ? (
         <div className="ds-stat__icon">
           <Icon name={icon} size={20} />
